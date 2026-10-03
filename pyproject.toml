@@ -14,7 +14,10 @@ dependencies = [
 jobradar = "jobradar.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8"]
+dev = [
+    "psycopg[binary]>=3.2",
+    "pytest>=8",
+]
 
 [build-system]
 requires = ["hatchling"]
