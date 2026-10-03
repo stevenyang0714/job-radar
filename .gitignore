@@ -1,0 +1,18 @@
+# 金鑰：絕對不能上傳
+.env
+.env.*
+!.env.example
+
+# Python 自動產生的檔案
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# macOS / iCloud
+.DS_Store
+*.icloud
