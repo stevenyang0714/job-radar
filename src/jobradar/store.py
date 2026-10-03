@@ -7,7 +7,10 @@ from typing import Any
 
 import httpx
 
-TABLES = ("jobs", "notifications", "runs", "source_runs")
+TABLES = ("jobs", "notifications", "ai_usage", "runs", "source_runs")
+
+# 推播時需要的職缺欄位
+NOTIFY_JOB_FIELDS = "id,source,ats,company,job_id,title,location,url,posted_date,description,salary,employment_type,via_agency,applicants,score,score_detail,closed_at"
 
 # 步驟 3 新增的欄位；檢查這些欄位可以知道 schema.sql 是否已更新
 REQUIRED_COLUMNS = {"jobs": "salary,via_agency,applicants,closed_at,score_detail"}
@@ -144,6 +147,28 @@ class Store:
         for chunk in _chunks(rows, CHUNK):
             added += self._insert("notifications", chunk, returning=True, on_conflict="job,kind", ignore_duplicates=True)
         return added
+
+    def pending_notifications(self) -> list[dict[str, Any]]:
+        """尚未發送的推播，連同職缺資料（job 欄位是 dict）。"""
+        select = f"id,kind,baseline,created_at,job:jobs({NOTIFY_JOB_FIELDS})"
+        return self._get_all("notifications", {"status": "eq.pending", "select": select, "order": "id"})
+
+    def mark_notifications(self, ids: Sequence[int], status: str) -> None:
+        values: dict[str, Any] = {"status": status}
+        if status == "sent":
+            values["sent_at"] = now_iso()
+        for chunk in _chunks(ids, CHUNK):
+            self._patch("notifications", {"id": _in(chunk)}, values)
+
+    def save_score(self, job_pk: int, score: int, detail: dict[str, Any]) -> None:
+        self._patch("jobs", {"id": f"eq.{job_pk}"}, {"score": score, "score_detail": detail, "scored_at": now_iso()})
+
+    def record_usage(self, row: dict[str, Any]) -> None:
+        self._insert("ai_usage", [row])
+
+    def cost_since(self, since: datetime) -> float:
+        rows = self._get_all("ai_usage", {"created_at": f"gte.{since.isoformat()}", "select": "cost_usd", "order": "id"})
+        return sum(float(r["cost_usd"]) for r in rows)
 
     def count_pending_notifications(self) -> dict[str, int]:
         rows = self._get_all("notifications", {"status": "eq.pending", "select": "kind", "order": "id"})

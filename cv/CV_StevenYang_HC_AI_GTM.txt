@@ -1,0 +1,55 @@
+Steven J. YANG
+
+INSEAD MBA | NTU Biomedical Engineering | 0-to-1 operator in AI, product, and go-to-market across APAC. Steven took a SaMD clinical software from concept to go-live in 4 hospitals, co-authored Taiwan's first Digital Long-Term Care Services Act., and first Zero Trust program that turned into a US$4M service line, and an enterprise AI portfolio built into 3 product lines and a US$2M pipeline across healthcare, and financial services. He decides what is worth building by proving what will sell, then make sure it ships, can operate between headquarters strategy and on-the-ground execution across Taiwan, Singapore, Thailand, Hong Kong, and US
+
+EDUCATION
+INSEAD	Singapore/Fontainebleau, France
+Master of Business Administration, Class of July 2026	Aug 2025 - Jul 2026
+	•	INSEAD Alumni Association (IAA) Endowed Scholarship
+Kellogg School of Management, Northwestern University	Evanston, USA
+MBA Exchange Program (AI strategy and healthcare focus)	Mar 2026 - May 2026
+National Taiwan University		Taipei, Taiwan
+M.S., Biomedical Engineering (tissue engineering, gene editing and machine learning for medical imaging)	Sep 2017 - Jun 2019
+Chang Gung University	Taoyuan, Taiwan
+B.S., Biotechnology and Biomedicine										     Sep 2012 - Jun 2016
+EXPERIENCE
+AngelSchool.VC	Singapore
+Venture Associate Intern	Apr 2026 - Jul 2026
+	•	Screened 10+ early-stage B2B software deal opportunities across Asia, mainly focused on healthcare and tech space, running commercial and operational diligence on market attractiveness, go-to-market readiness, business model, and competitive positioning, and converting each screen into an invest or pass recommendation for the syndicate
+ScaleX Consulting (ScaleX Pte. Ltd.)	Singapore
+A boutique strategy consulting firm focusing on market entry and M&A advisory services
+MBA Intern	Jan 2026 - Mar 2026
+	•	Advised a pharmaceutical company on entering SEA market, leading market sizing, regulatory pathway, and competitive analysis across Singapore and Malaysia; the recommendation moved the client to relocate manufacturing from Hong Kong to Singapore and open a Singapore office
+	•	Screened the portfolio against HAS and NPRA requirements, mapping channel readiness and Halal compliance, and built AI scrapers that cut regulatory review time
+	•	Evaluated 50+ competitors, pricing models, and channel strategies, and built the segmentation and market attractiveness analysis that set the client's target segments and standardized market share and performance reporting
+iKala Interactive Media Inc.	Taipei, Taiwan and Singapore
+Top 30 AI SaaS company in Taiwan and enterprise AI transformation provider
+Senior Manager, AI Services and Product (CEO Office from May 2025)	Dec 2024 - Jan 2026
+	•	Built the enterprise AI product portfolio from zero as product co-owner: screened candidate use cases on ROI and technical feasibility, tested them against recurring customer requirements, and put 3 product lines to the COO and CEO for investment, cutting the use cases that could not clear the return threshold
+	•	Wrote the function list and set the build sequence with product and engineering for each line, shipping Nexus, a one-box on-premises solution integrating AI server, model stack, and agentic workflows, positioned for regulated buyers that cannot move data to public cloud and taken to market with Leadtek, NVIDIA, and Qualcomm in the channel
+	•	Designed the enterprise target account methodology from zero, setting ROI thresholds by segment, combining internal coverage with purchased third-party data and partner channels, and running outbound personally to validate it before handover to the commercial team; built a US$2M+ pipeline in 12 months
+	•	Co-owned product direction and feature consultation for the Kolr to Kolr 2 SaaS upgrade, turning win/loss patterns and 20+ commercial and competitive analyses across retail, financial services, and manufacturing into the next-generation roadmap and a recurring market intelligence pack reviewed by leadership and product
+	•	Built the group operating cadence from scratch, a transformation scorecard of priorities, owners, and targets, a monthly business review, and gap-to-goal reporting to the CEO and regional leadership, converting variance and root cause analysis into the next quarter’s priorities and resource allocation
+	•	Drove AI adoption across product, sales, consulting, and operations through enablement workshops, boot camps, reusable prompt libraries, and agentic workflow templates, under an ISO 42001 responsible AI governance framework covering model-use policy and human-in-the-loop review
+Deloitte Touche Tohmatsu Limited (DTTL)	Taipei, Taiwan
+Senior Manager, Cyber and Strategic Risk (Program Delivery, Financial Services)	Jan 2021 - Dec 2024
+	•	Promoted twice ahead of the standard timeline, reaching Senior Manager from consultant in 3.5 years, and led a cross-border team of 6 across Taiwan, Hong Kong, Thailand, and Singapore through 70+ engagements
+	•	Turned a regulatory trend into a service line by building Taiwan's first Zero Trust Architecture program in financial services, generating US$4M in new revenue, a committed roadmap through 2028, and directing US$2M in implementation investment
+	•	Productized the model once in Taiwan and replicated it across Hong Kong, Singapore, and Thailand branches: 20+ governance frameworks and readiness reviews for the country's 5 largest banks, aligned to MAS TRM, FSC, HKMA, and SFC
+	•	Lead-authored the Digital Cloud system in Long-Term Care Services Act (2021), FSC Zero Trust Guidelines (2024) and Digital Identity Verification Guidelines (2023), negotiating with the regulator to carry industry constraints into the national standard, and standardized 200+ procedures adopted across 8+ business units
+	•	Secured C-suite and board approval on phased plans with named owners and KPIs for 10+ institutions, and led 10+ overseas AML/KYC and IT control reviews for U.S. branches covering NYDFS Part 500
+	•	Drove stakeholder engagement and change management activities across C-suite, legal, and operations teams to encourage sustainable adoption of AI-enabled and governance workflows; acted as an internal thought leader on emerging regulations, and responsible AI practices
+Encorphin Healthcare Co. Ltd.	Taipei, Taiwan
+Software as a Medical Device startup improving outpatient flow efficiency
+Co-Founder and Chief Executive Officer	Jun 2017 - Feb 2019
+	•	Founded the company and took the product from concept to go-live in 4 hospitals and 2 clinics, defining requirements with 20+ clinicians, sequencing each site rollout, and validating every release in live outpatient flow
+	•	Cut patient wait time 67%, roughly 37 minutes per visit, by shipping a machine learning based clinical-grade scheduling and workflow system
+	•	Raised US$50K in seed funding from a Fortune Global 500 investor and government agencies to fund the first commercial deployment
+
+ADDITIONAL INFORMATION
+Go-to-Market: Target account methodology; customer segmentation and ROI setting; pricing and channel strategy; pipeline build and outbound; partner and ecosystem development
+Product: Product discovery and requirements; function definition and build sequencing; roadmap and prioritization; written narratives and PR/FAQ; launch and adoption metrics
+Program: Business review cadence; KPI and OKR frameworks; gap-to-goal and executive reporting; variance and root cause analysis; cross-functional orchestration
+AI: Agentic AI and workflow; RAG; LLM fine-tuning and production deployment; responsible AI governance (ISO 42001); low-code build & automation
+Licenses: ISACA CISA; ISC2 CC; ISO/IEC 42001:2023 LA, ISO/IEC 23894:2023, ISO/IEC 27001:2022 LA; BS 10012 LA; ISO/IEC 27799:2016; ISO/IEC 27701:2019
+Languages: Mandarin (Native), English (Fluent), Taiwanese (Basic) | Work authorization: Taiwan (R.O.C.) | Mobility: Singapore and open to global relocation

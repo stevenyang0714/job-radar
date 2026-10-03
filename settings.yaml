@@ -1,0 +1,16 @@
+# 評分與推播設定（改完存檔、推上 GitHub，下一次執行就會套用）
+
+scoring:
+  model: gpt-6-luna            # OpenAI 模型
+  reasoning_effort: low        # none / low / medium / high：越高想得越仔細，也越貴
+  service_tier: flex           # flex = 半價但較慢；auto = 一般速度、全價
+  monthly_budget_usd: 5        # 當月評分費用達到上限就停止評分，並發 Telegram 通知
+  max_per_run: 1000            # 每次執行最多評幾筆
+
+notifications:
+  instant_min_score: 70        # 達到這個分數立即推播
+  digest_min_score: 50         # 達到這個分數放進每日摘要；低於就不通知
+  baseline_min_score: 70       # 新來源第一次執行時，初始盤點清單只列這個分數以上的職缺
+  digest_after_hour: 0         # 台灣時間這個小時以後的排程執行才發每日摘要；每天只在 08:00 跑一次，所以設 0 = 每次都發
+  new_within_days: 7           # 🆕 刊登幾天內算新職缺
+  long_open_after_days: 120    # ⏳ 刊登幾天以上仍未關閉算久開

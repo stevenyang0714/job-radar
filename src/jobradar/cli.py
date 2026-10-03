@@ -5,10 +5,12 @@ from collections import Counter
 
 import httpx
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from jobradar.adapters import ADAPTERS, Adapter, get_adapter
-from jobradar.config import ConfigError, Settings, load_profile, load_settings, load_sources
+from jobradar.alerts import TAIPEI, AlertReport, usage_row, dispatch, score_pending, to_job
+from jobradar.config import ConfigError, Settings, load_app_settings, load_cvs, load_profile, load_settings, load_sources
+from jobradar.scorer import Scorer
 from jobradar.detect import detect
 from jobradar.messages import SourceWarning, format_job, format_warnings
 from jobradar.models import Source
@@ -222,22 +224,105 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"❌ {e}")
         return 1
 
+    try:
+        app = load_app_settings()
+        scorer = None if args.no_score else Scorer(settings.openai_api_key, app.scoring, load_profile(), load_cvs())
+    except (ConfigError, ValueError) as e:
+        print(f"❌ {e}")
+        return 1
+
     notifier = None if args.no_notify else Telegram(settings.telegram_bot_token, settings.telegram_chat_id)
+    now = datetime.now(TAIPEI)
+    send_digest = args.digest or (args.trigger == "schedule" and now.hour >= app.notifications.digest_after_hour)
     with Store(settings.supabase_url, settings.supabase_secret_key) as store, make_client() as client:
         missing = store.missing_tables() or store.missing_columns()
         if missing:
-            print(f"❌ 資料庫缺少 {', '.join(missing)} → 請到 Supabase SQL Editor 執行 supabase/schema.sql")
+            print(f"❌ 資料庫缺少 {', '.join(missing)} → 執行 uv run jobradar db-migrate")
             return 1
         try:
-            report = run(sources, store, notifier, client, trigger=args.trigger)
+            report = run(sources, store, notifier, client, trigger=args.trigger, today=now.date(), rules=app.notifications)
+            alerts = AlertReport()
+            if scorer:
+                score_pending(store, scorer, app.scoring, now.date(), alerts)
+                dispatch(store, notifier, app.notifications, now.date(), alerts, send_digest, _status_line(report, alerts))
         except TelegramError as e:
             print(f"❌ Telegram 發送失敗：{e}")
             return 1
         pending = store.count_pending_notifications()
 
     _print_report(report, pending, sent=notifier is not None)
+    if scorer:
+        _print_alerts(alerts)
     # 警告已成功送到 Telegram 就算正常結束；沒有推播時，以結束代碼提醒有來源失敗
     return 1 if args.no_notify and report.status != "ok" else 0
+
+
+def _status_line(report: RunReport, alerts: AlertReport) -> str:
+    """每日摘要最後的執行狀態；每天都會收到摘要，沒收到就代表排程停了。"""
+    ok = sum(r.status == "ok" for r in report.results)
+    down = [r.source.company for r in report.results if r.status != "ok"]
+    text = f"⚙️ 這次執行：{ok}/{len(report.results)} 個來源正常"
+    if down:
+        text += f"（{', '.join(down)} 暫時無法使用）"
+    text += f"｜本月 AI 評分 US${alerts.month_cost_usd:.2f} / {alerts.budget_usd:.0f}"
+    if alerts.budget_hit:
+        text += "（已達上限，暫停評分）"
+    return text
+
+
+def _print_alerts(alerts: AlertReport) -> None:
+    print(f"\nAI 評分：{alerts.scored} 筆，失敗 {alerts.failed} 筆，這次 US${alerts.cost_usd:.4f}，本月累計 US${alerts.month_cost_usd:.4f}")
+    if alerts.budget_hit or alerts.unscored:
+        print(f"  ⚠️ 尚未評分 {alerts.unscored} 筆" + ("（已達每月預算上限）" if alerts.budget_hit else ""))
+    for error in alerts.errors[:3]:
+        print(f"  ❌ {error}")
+    print(
+        f"推播：立即 {alerts.instant_sent} 則、初始盤點清單 {alerts.baseline_listed} 筆、"
+        f"每日摘要 {'已發送 ' + str(alerts.digest_listed) + ' 筆' if alerts.digest_sent else '未發送'}、未達門檻 {alerts.skipped} 筆"
+    )
+
+
+def cmd_score(args: argparse.Namespace) -> int:
+    """試評：從待評分職缺挑幾筆評分並顯示結果，不寫回職缺、不推播（費用會記入本月用量）。"""
+    try:
+        settings = load_settings()
+        app = load_app_settings()
+        overrides = {k: v for k, v in (("model", args.model), ("reasoning_effort", args.effort)) if v}
+        scoring = app.scoring.model_copy(update=overrides)
+        scorer = Scorer(settings.openai_api_key, scoring, load_profile(), load_cvs())
+    except (ConfigError, ValueError) as e:
+        print(f"❌ {e}")
+        return 1
+
+    today = datetime.now(TAIPEI).date()
+    with Store(settings.supabase_url, settings.supabase_secret_key) as store:
+        sample = _spread_sample(store.pending_notifications(), args.sample)
+        print(f"試評 {len(sample)} 筆｜{scoring.model}｜reasoning {scoring.reasoning_effort}｜{scoring.service_tier}\n")
+        total = 0.0
+        for n in sample:
+            outcome = scorer.score(to_job(n["job"]), n["kind"], today)
+            store.record_usage(usage_row(n["job"]["id"], outcome))
+            r, u = outcome.result, outcome.usage
+            total += u.cost_usd
+            print(f"{r.score:>3} 分｜{n['job']['company'][:20]}｜{n['job']['title'][:60]}")
+            print(f"      Track {r.track}｜{r.cv_version}｜輸出 {u.output_tokens} tokens（推理 {u.reasoning_tokens}）｜US${u.cost_usd:.5f}")
+            print(f"      ✅ {' / '.join(r.fit_points)[:220]}")
+            print(f"      ⚠️ {' / '.join(r.gaps)[:160]}")
+    print(f"\n合計 US${total:.4f}")
+    return 0
+
+
+def _spread_sample(pending: list[dict], size: int) -> list[dict]:
+    """從不同來源輪流挑選，讓試評涵蓋各種公司。"""
+    by_source: dict[str, list[dict]] = {}
+    for n in pending:
+        by_source.setdefault(n["job"]["source"], []).append(n)
+    sample: list[dict] = []
+    while len(sample) < size and any(by_source.values()):
+        for items in by_source.values():
+            if items and len(sample) < size:
+                sample.append(items.pop(0))
+    return sample
 
 
 def _print_report(report: RunReport, pending: dict[str, int], sent: bool) -> None:
@@ -331,8 +416,16 @@ def main(argv: list[str] | None = None) -> int:
     run_cmd = sub.add_parser("run", help="正式執行：抓取、去重、寫入資料庫、推播警告與初始盤點")
     run_cmd.add_argument("--source", action="append", help="只處理指定來源（sources.yaml 的 name），可重複")
     run_cmd.add_argument("--no-notify", action="store_true", help="不發送 Telegram，只寫入資料庫")
+    run_cmd.add_argument("--no-score", action="store_true", help="不做 AI 評分（也不發職缺推播）")
+    run_cmd.add_argument("--digest", action="store_true", help="這次執行也發每日摘要（排程執行會自動發）")
     run_cmd.add_argument("--trigger", default="local", choices=["local", "schedule", "manual"], help="執行來源，記錄用")
     run_cmd.set_defaults(func=cmd_run)
+
+    score_cmd = sub.add_parser("score", help="試評幾筆待評分職缺並顯示結果（不寫回、不推播），改 profile.md 後可先試試")
+    score_cmd.add_argument("--sample", type=int, default=5, help="試評幾筆（預設 5）")
+    score_cmd.add_argument("--model", help="暫時改用其他模型，例如 gpt-6.1-sol")
+    score_cmd.add_argument("--effort", choices=["none", "low", "medium", "high"], help="暫時改用其他推理強度")
+    score_cmd.set_defaults(func=cmd_score)
 
     sub.add_parser("test-notify", help="發送示範訊息到 Telegram，看警告與職缺通知的格式").set_defaults(
         func=cmd_test_notify

@@ -10,14 +10,14 @@ import httpx
 
 from jobradar.adapters import Adapter, UnsupportedSource, get_adapter
 from jobradar.adapters.base import SourceUnavailable
+from jobradar.config import NotificationSettings
 from jobradar.detect import detect_from_url
 from jobradar.filters import Verdict, find_term, screen_detail, screen_listing
 from jobradar.messages import BaselineSummary, SourceWarning, format_baseline, format_warnings
 from jobradar.models import AtsType, Job, Source
 from jobradar.store import KnownJob, SourceHistory
 
-NEW_WITHIN_DAYS = 7  # 刊登一週內：🆕 新刊登
-LONG_OPEN_AFTER_DAYS = 120  # 刊登 4 個月以上仍未關閉：⏳ 可能找不到人
+DEFAULT_RULES = NotificationSettings()  # 天數門檻的預設值，實際以 settings.yaml 為準
 
 
 class StoreLike(Protocol):
@@ -96,10 +96,11 @@ def job_age_days(posted_date: date | None, first_seen: date, today: date) -> int
     return (today - (posted_date or first_seen)).days
 
 
-def notification_kind(age_days: int) -> str | None:
-    if age_days <= NEW_WITHIN_DAYS:
+def notification_kind(age_days: int, rules: NotificationSettings = DEFAULT_RULES) -> str | None:
+    """🆕 刊登一週內；⏳ 刊登 4 個月以上仍未關閉（可能找不到人）。"""
+    if age_days <= rules.new_within_days:
         return "new"
-    if age_days >= LONG_OPEN_AFTER_DAYS:
+    if age_days >= rules.long_open_after_days:
         return "long_open"
     return None
 
@@ -113,7 +114,13 @@ def job_row(job: Job, filter_status: str) -> dict[str, Any]:
 
 
 def process_source(
-    source: Source, adapter: Adapter, store: StoreLike, run_id: int, other_companies: list[str], today: date
+    source: Source,
+    adapter: Adapter,
+    store: StoreLike,
+    run_id: int,
+    other_companies: list[str],
+    today: date,
+    rules: NotificationSettings = DEFAULT_RULES,
 ) -> SourceResult:
     history = store.source_history(source.name)
     baseline = not history.has_success
@@ -151,12 +158,12 @@ def process_source(
 
     notifications = []
     for s in stored:
-        kind = notification_kind(job_age_days(s.job.posted_date, today, today)) if s.verdict.passed else None
+        kind = notification_kind(job_age_days(s.job.posted_date, today, today), rules) if s.verdict.passed else None
         if kind:
             notifications.append({"job": ids[(s.job.company, s.job.job_id)], "kind": kind, "baseline": baseline})
     for k in seen.values():
         # 之前看過、這次仍在的職缺：滿 4 個月時觸發（已通知過的會被資料庫略過）
-        if k.filter_status == "passed" and job_age_days(k.posted_date, k.first_seen_at.date(), today) >= LONG_OPEN_AFTER_DAYS:
+        if k.filter_status == "passed" and job_age_days(k.posted_date, k.first_seen_at.date(), today) >= rules.long_open_after_days:
             notifications.append({"job": k.id, "kind": "long_open", "baseline": False})
     added = store.add_notifications(notifications) if notifications else []
 
@@ -185,6 +192,7 @@ def run(
     client: httpx.Client,
     trigger: str,
     today: date | None = None,
+    rules: NotificationSettings = DEFAULT_RULES,
 ) -> RunReport:
     today = today or date.today()
     run_id = store.start_run(trigger)
@@ -195,7 +203,7 @@ def run(
         ats = resolve_ats(source)
         others = company_names if ats == "mycareersfuture" else []
         try:
-            result = process_source(source, get_adapter(ats, client), store, run_id, others, today)
+            result = process_source(source, get_adapter(ats, client), store, run_id, others, today, rules)
         except Exception as e:  # 一個來源失敗不影響其他來源
             message = describe_error(e)
             try:

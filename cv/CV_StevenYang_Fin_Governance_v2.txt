@@ -1,0 +1,45 @@
+Steven J. YANG
+
+INSEAD MBA | Technology risk, information security, and AI governance for financial institutions across APAC and the U.S.
+Former Deloitte Risk Advisory Senior Manager with four years leading technology risk, Zero Trust, and ISMS/PIMS/KYC/AML projects for banks and regulators across Taiwan, Singapore, Thailand, Hong Kong, and the US, aligned with MAS, HKMA, TW FSC. Lead author of Taiwan's FSC Zero Trust Guidelines (2024), the first ZTA guidance finance institutions. Certified in AI Governance (ISO/IEC 42001, ISO/IEC 23894), CISA, ISO/IEC 27001 LA, ISO/IEC 27799:2016, BS 10012:2017 LA
+
+EDUCATION
+INSEAD	Singapore and Fontainebleau, France
+Master of Business Administration, Class of July 2026	Aug 2025 - Jul 2026
+	•	INSEAD Alumni Association (IAA) Endowed Scholarship
+Kellogg School of Management, Northwestern University	Evanston, USA
+MBA Exchange Program (AI and low-code focus)	Mar 2026 - May 2026
+National Taiwan University	Taipei, Taiwan
+M.S., Biomedical Engineering	Sep 2017 - Jun 2019
+Chang Gung University	Taoyuan, Taiwan
+B.S., Biotechnology and Biomedicine	Sep 2012 - Jun 2016
+
+EXPERIENCE
+ScaleX Consulting (ScaleX Pte. Ltd.)	Singapore
+A boutique consulting firm helping enterprises expand globally with strategic consulting, market entry, and M&A advisory services
+MBA Intern	Jan 2026 - Mar 2026
+	•	Delivered market entry, regulatory (HSA and NPRA), and commercial feasibility assessments for medicine and health supplement products across Singapore and Malaysia, covering competitive dynamics, policy trends, channel readiness, and Halal compliance
+	•	Evaluated 50+ competitors, pricing models, and channel strategies, building segmentation and market attractiveness analyses to support standardized market share and performance reporting
+iKala Interactive Media Inc.	Taipei, Taiwan and Singapore
+A top 30 AI SaaS startup in Taiwan and AI transformation solutions provider
+Senior Manager, AI Services (Consulting and Business Development; CEO Office from May 2025)	Dec 2024 - Jan 2026
+	•	Partnered directly with C-suite executives to establish responsible AI governance frameworks (ISO/IEC 42001), covering data privacy, model governance, and regulatory compliance across cloud, on-premises, and hybrid AI deployments
+	•	Spearheaded group-wide AI transformation and enterprise AI deployment from the CEO Office; led adoption of AI tools and agentic workflows across product, sales, consulting, and operations through structured change management programs
+	•	Built, fine-tuned, and deployed GenAI and agentic workflows (LLMs, RAG) into production across enterprise functions; monitored post-go-live performance
+	•	Identified and scaled AI use cases across healthcare, finance, and manufacturing through 20+ market and competitive analyses
+Deloitte Touche Tohmatsu Limited (Deloitte Taiwan)	Taipei, Taiwan
+Senior Manager, Risk Advisory (Cyber and Strategic Risk)	Jan 2021 - Dec 2024
+	•	Early promoted twice, reaching Senior Manager in 3.5 years (Manager in 2022, Sr. Manager in 2024), and led a cross-border team of 6 through 70+ technology risk, cybersecurity governance, and regulatory compliance engagements across financial, healthcare, and manufacturing sectors for APAC and U.S. clients
+	•	Shaped financial-sector regulation from research through industry consultation, including drafting responses to member-institution comments: Co-author of Taiwan's Digital Identity Verification Guidelines (2023) and the FSC Zero Trust Guidelines (2024), and contributor to a draft of governance-level AI requirements
+	•	Led 10+ AML/KYC system audits and IT control reviews for overseas bank branches in the United States (Silicon Valley, Los Angeles, Chicago), Thailand, and Singapore, covering transaction monitoring and NYDFS Part 500 compliance
+	•	Built 20+ IT and information security governance frameworks, maturity assessments, and regulatory readiness reviews for Taiwan's five largest financial institutions, regulatory authorities, and their Thailand, Singapore, and Hong Kong branches, aligned with MAS TRM, HKMA, and FSC expectations
+	•	Developed strategic roadmaps for 10+ financial institutions, including Taiwan's largest commercial bank, translating governance strategy into phased plans with named owners and KPIs approved at board level, and accelerating annual Statement of Internal Control and information security audit readiness
+	•	Generated over US$4M in commercial opportunities and secured a committed multi-year roadmap through 2028 by co-leading Taiwan's first Zero Trust Architecture program for the financial sector
+	•	Authored and operationalized 200+ procedures, playbooks, and governance drills across AI governance, cybersecurity, and data privacy, adopted by 8+ business units including IT, information security, legal, and sales
+
+ADDITIONAL INFORMATION
+Risk: Technology risk assessment; ITGC and application controls; risk register and KRI monitoring; third-party risk; internal control testing; regulatory examination readiness; board-level risk reporting; Zero Trust Architecture
+Compliance: IT audit; ISMS (ISO/IEC 27001); PIMS (ISO/IEC 27701, BS 10012); NIST Cybersecurity Framework; COBIT; MAS TRM; NYDFS Part 500; AML/KYC/CDD; SWIFT audit; GDPR; CPRA; PDPA
+AI: Responsible AI governance (ISO/IEC 42001); workflow redesign and automation; adoption KPI monitoring; change management and stakeholder engagement; workshop and boot camp facilitation; generative AI and LLMs; agentic AI; RAG
+Licenses: ISACA CISA; ISC2 CC; ISO/IEC 42001:2023 LA, ISO/IEC 23894:2023, ISO/IEC 27001:2022 LA; BS 10012 LA; ISO/IEC 27799:2016; ISO/IEC 27701:2019
+Languages:	Mandarin (Native), English (Fluent), Taiwanese (Basic) | Work authorization: Taiwan (R.O.C.) | Mobility: Singapore and open to global relocation
