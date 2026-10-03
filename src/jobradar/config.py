@@ -50,15 +50,25 @@ def load_settings(env_file: Path = ROOT / ".env") -> Settings:
     )
 
 
+DEFAULT_FIELDS = ("locations", "keywords", "exclude")
+
+
 def load_sources(path: Path = ROOT / "sources.yaml") -> list[Source]:
     try:
         data = yaml.safe_load(_read(path)) or {}
     except yaml.YAMLError as e:
         raise ConfigError(f"{path.name} 不是有效的 YAML：\n{e}") from e
+
+    defaults = data.get("defaults") or {}
+    if not isinstance(defaults, dict) or set(defaults) - set(DEFAULT_FIELDS):
+        raise ConfigError(f"{path.name} 的 defaults 只能包含：{', '.join(DEFAULT_FIELDS)}")
+
     sources = []
     for i, item in enumerate(data.get("sources") or [], start=1):
+        if not isinstance(item, dict):
+            raise ConfigError(f"{path.name} 第 {i} 個來源格式錯誤：應為 name、company、url 等欄位")
         try:
-            sources.append(Source.model_validate(item))
+            sources.append(Source.model_validate(_apply_defaults(item, defaults)))
         except ValidationError as e:
             raise ConfigError(f"{path.name} 第 {i} 個來源格式錯誤：\n{e}") from e
 
@@ -67,6 +77,15 @@ def load_sources(path: Path = ROOT / "sources.yaml") -> list[Source]:
     if duplicates:
         raise ConfigError(f"{path.name} 的 name 重複：" + ", ".join(duplicates))
     return sources
+
+
+def _apply_defaults(item: dict, defaults: dict) -> dict:
+    """locations、keywords：來源有寫就用來源的；exclude：來源的排除詞加在 defaults 之上。"""
+    merged = {**{k: v for k, v in defaults.items() if k != "exclude"}, **item}
+    exclude = [*(defaults.get("exclude") or []), *(item.get("exclude") or [])]
+    if exclude:
+        merged["exclude"] = list(dict.fromkeys(exclude))
+    return merged
 
 
 def load_profile(path: Path = ROOT / "profile.md") -> str:

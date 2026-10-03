@@ -42,6 +42,30 @@ def test_invalid_fields_rejected(tmp_path, extra):
         load_sources(path)
 
 
+def test_defaults_apply_and_exclude_is_merged(tmp_path):
+    path = _write_sources(
+        tmp_path,
+        """
+defaults:
+  locations: [Taiwan, Singapore]
+  keywords: [AI]
+  exclude: [intern]
+sources:
+  - {name: a, company: A, url: https://jobs.lever.co/a}
+  - {name: b, company: B, url: https://jobs.lever.co/b, locations: [Hong Kong], keywords: [], exclude: [sales, intern]}
+""",
+    )
+    a, b = load_sources(path)
+    assert (a.locations, a.keywords, a.exclude) == (["Taiwan", "Singapore"], ["AI"], ["intern"])
+    assert (b.locations, b.keywords, b.exclude) == (["Hong Kong"], [], ["intern", "sales"])
+
+
+def test_unknown_defaults_field_rejected(tmp_path):
+    path = _write_sources(tmp_path, "defaults: {location: [Taiwan]}\nsources: []\n")
+    with pytest.raises(ConfigError, match="defaults"):
+        load_sources(path)
+
+
 def test_missing_env_listed(tmp_path, monkeypatch):
     for name in REQUIRED_ENV:
         monkeypatch.delenv(name, raising=False)

@@ -1,18 +1,74 @@
 # 職缺來源設定
 #
-# 每個來源的欄位：
-#   name       唯一代號（小寫英數、- 或 _），用在紀錄與警告訊息
-#   company    公司名稱
-#   url        招募網站網址，系統會自動辨識是 Workday / Greenhouse / Lever / Ashby / 其他
-#   locations  只保留這些地區的職缺（比對職缺地點，不分大小寫）
-#   keywords   職稱或職缺描述含任一關鍵字才保留；留空 = 不限
-#   exclude    職稱含任一排除詞就略過
-#   type       選填；自動辨識錯誤時手動指定：workday / greenhouse / lever / ashby / generic
+# defaults：所有來源共用的篩選條件
+#   locations  只保留這些地區的職缺；來源自己有寫 locations 時，以來源的為準
+#   keywords   職稱或職缺內容含任一關鍵字才保留；留空 = 不限；來源自己有寫時，以來源的為準
+#   exclude    職稱含任一排除詞就略過；來源自己寫的排除詞會「加在」這份清單上
+#
+# sources：每個來源
+#   name / company / url 必填；locations / keywords / exclude 選填（沒寫就用 defaults）
+#   type  選填；自動辨識錯誤時手動指定：workday / greenhouse / lever / ashby / generic
+#
+# 比對規則：不分大小寫；英文以完整單字比對（AI 不會比對到 maintain），中文以字串比對
+# 新增公司前，可以先用 `uv run jobradar detect <網址>` 確認系統類型
+
+defaults:
+  # profile.md：台灣、新加坡、香港
+  locations: [Taiwan, Singapore, Hong Kong]
+
+  # profile.md 四條求職方向的核心詞
+  keywords:
+    # Track A：AI 治理、科技風險、資安
+    - AI
+    - artificial intelligence
+    - governance
+    - risk
+    - cyber
+    - cybersecurity
+    - information security
+    - compliance
+    # Track B：醫療數位轉型、數據與創新
+    - digital
+    - digital health
+    - transformation
+    - data
+    - innovation
+    - market access
+    - commercial excellence
+    # Track C：AI 導入、解決方案、商業化
+    - solutions
+    - business development
+    - partnerships
+    - go-to-market
+    - GTM
+    - product manager
+    # Track D：策略、轉型專案管理
+    - strategy
+    - strategic
+    - consulting
+    - consultant
+    - program manager
+    - programme manager
+    - chief of staff
+
+  # profile.md 第 4 節：排除條件
+  exclude:
+    - intern
+    - internship
+    - part-time
+    - part time
+    - software engineer
+    - data engineer
+    - machine learning engineer
+    - ML engineer
+    - developer
+    - nurse
+    - pharmacist
+    - physician
 
 sources:
   - name: abbott
     company: Abbott
     url: https://abbott.wd5.myworkdayjobs.com/abbottcareers
-    locations: [Singapore, Taiwan]
-    keywords: []
-    exclude: []
+    # 醫療器材／藥品的純業務職（profile.md：與 AI、科技、顧問無關的純業務職）
+    exclude: [sales representative, sales specialist]

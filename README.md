@@ -14,4 +14,12 @@
 | 指令 | 用途 |
 |---|---|
 | `uv run jobradar check` | 檢查設定檔、金鑰與各服務連線（不會發送任何訊息） |
+| `uv run jobradar detect <網址>` | 判斷招募網址屬於哪種招募系統，新增公司前先跑這個 |
+| `uv run jobradar fetch [--source 名稱] [-v]` | 抓取職缺並套用硬篩，只顯示結果（不寫資料庫、不推播） |
 | `uv run pytest` | 執行測試 |
+
+## 新增公司
+
+1. `uv run jobradar detect https://公司招募網址`，確認類型與建議網址
+2. 在 `sources.yaml` 的 `sources:` 下加一筆 `name`、`company`、`url`（篩選條件沒寫就套用 `defaults`）
+3. `uv run jobradar fetch --source 名稱` 看抓取與篩選結果
