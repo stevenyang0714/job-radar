@@ -50,7 +50,8 @@ def load_settings(env_file: Path = ROOT / ".env") -> Settings:
     )
 
 
-DEFAULT_FIELDS = ("locations", "keywords", "exclude")
+FILTER_FIELDS = ("locations", "keywords", "exclude", "exclude_description")
+_ACCUMULATED = ("exclude", "exclude_description")  # 各層累加，不互相取代
 
 
 def load_sources(path: Path = ROOT / "sources.yaml") -> list[Source]:
@@ -59,16 +60,21 @@ def load_sources(path: Path = ROOT / "sources.yaml") -> list[Source]:
     except yaml.YAMLError as e:
         raise ConfigError(f"{path.name} 不是有效的 YAML：\n{e}") from e
 
-    defaults = data.get("defaults") or {}
-    if not isinstance(defaults, dict) or set(defaults) - set(DEFAULT_FIELDS):
-        raise ConfigError(f"{path.name} 的 defaults 只能包含：{', '.join(DEFAULT_FIELDS)}")
+    defaults = _filter_block(data.get("defaults"), "defaults", path)
+    groups_data = data.get("groups") or {}
+    if not isinstance(groups_data, dict):
+        raise ConfigError(f"{path.name} 的 groups 格式錯誤：應為「分組名稱: 篩選條件」")
+    groups = {name: _filter_block(block, f"groups.{name}", path) for name, block in groups_data.items()}
 
     sources = []
     for i, item in enumerate(data.get("sources") or [], start=1):
         if not isinstance(item, dict):
             raise ConfigError(f"{path.name} 第 {i} 個來源格式錯誤：應為 name、company、url 等欄位")
+        group = item.get("group")
+        if group is not None and group not in groups:
+            raise ConfigError(f"{path.name} 第 {i} 個來源的 group「{group}」不存在，可用：{', '.join(groups)}")
         try:
-            sources.append(Source.model_validate(_apply_defaults(item, defaults)))
+            sources.append(Source.model_validate(_merge([defaults, groups.get(group, {}), item])))
         except ValidationError as e:
             raise ConfigError(f"{path.name} 第 {i} 個來源格式錯誤：\n{e}") from e
 
@@ -79,12 +85,27 @@ def load_sources(path: Path = ROOT / "sources.yaml") -> list[Source]:
     return sources
 
 
-def _apply_defaults(item: dict, defaults: dict) -> dict:
-    """locations、keywords：來源有寫就用來源的；exclude：來源的排除詞加在 defaults 之上。"""
-    merged = {**{k: v for k, v in defaults.items() if k != "exclude"}, **item}
-    exclude = [*(defaults.get("exclude") or []), *(item.get("exclude") or [])]
-    if exclude:
-        merged["exclude"] = list(dict.fromkeys(exclude))
+def _filter_block(block: object, label: str, path: Path) -> dict:
+    block = block or {}
+    if not isinstance(block, dict) or set(block) - set(FILTER_FIELDS):
+        raise ConfigError(f"{path.name} 的 {label} 只能包含：{', '.join(FILTER_FIELDS)}")
+    return block
+
+
+def _merge(layers: list[dict]) -> dict:
+    """依 defaults → group → 來源 的順序合併。
+
+    locations、keywords：後面的層有寫就取代前面的；exclude、exclude_description：各層累加。
+    """
+    merged: dict = {}
+    accumulated: dict[str, list[str]] = {field: [] for field in _ACCUMULATED}
+    for layer in layers:
+        merged.update({k: v for k, v in layer.items() if k not in _ACCUMULATED})
+        for field in _ACCUMULATED:
+            accumulated[field] += layer.get(field) or []
+    for field, terms in accumulated.items():
+        if terms:
+            merged[field] = list(dict.fromkeys(terms))
     return merged
 
 

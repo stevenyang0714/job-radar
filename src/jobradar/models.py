@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-AtsType = Literal["workday", "greenhouse", "lever", "ashby", "generic"]
+AtsType = Literal["workday", "greenhouse", "lever", "ashby", "mycareersfuture", "generic"]
 
 
 class Source(BaseModel):
@@ -15,10 +15,15 @@ class Source(BaseModel):
     name: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
     company: str = Field(min_length=1)
     url: HttpUrl
+    group: str | None = None  # sources.yaml groups 裡的分組，例如 healthcare
     locations: list[str] = []
     keywords: list[str] = []
     exclude: list[str] = []
+    exclude_description: list[str] = []  # 職缺內容含這些詞就略過，例如「限新加坡公民」
     type: AtsType | None = None  # 不填則依網址自動辨識
+    # 搜尋型來源（例如 MyCareersFuture）才用得到
+    searches: list[str] = []
+    min_salary: int | None = None  # 月薪上限至少要達到這個數字
 
 
 class Job(BaseModel):
@@ -33,3 +38,7 @@ class Job(BaseModel):
     url: str
     posted_date: date | None = None
     description: str | None = None  # 清單階段通常沒有，fetch_detail 後才補上
+    salary: str | None = None  # 有公開薪資才有，例如「SGD 13,000–16,000 / 月」
+    employment_type: str | None = None  # 例如「Permanent, Full Time」
+    via_agency: bool = False  # 由仲介刊登
+    applicants: int | None = None  # 應徵人數（MyCareersFuture 才有）

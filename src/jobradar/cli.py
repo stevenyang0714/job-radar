@@ -15,6 +15,7 @@ from jobradar.web import make_client
 _REJECT_LABELS = {
     "rejected_location": "地區不符",
     "rejected_exclude": "排除詞",
+    "rejected_description": "內容排除詞",
     "rejected_keyword": "關鍵字不符",
 }
 
@@ -133,7 +134,8 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     with make_client() as client:
         for source in sources:
             ats = resolve_ats(source)
-            print(f"\n== {source.name}（{source.company} · {ats}）==")
+            labels = " · ".join(filter(None, [source.company, source.group, ats]))
+            print(f"\n== {source.name}（{labels}）==")
             try:
                 adapter = get_adapter(ats, client)
                 screened = screen_jobs(adapter, source, adapter.list_jobs(source))
@@ -158,16 +160,24 @@ def _print_screened(adapter: Adapter, screened: list[Screened], verbose: bool) -
         print("\n  ✅ 通過硬篩（之後會送 AI 評分）")
     for s in passed:
         job = s.job
-        hit = f"｜命中「{s.verdict.reason}」" if s.verdict.reason else ""
-        print(f"  • {job.title}｜{job.location}｜{job.posted_date or '日期不明'}{hit}")
+        extras = [
+            job.company if job.ats == "mycareersfuture" else None,  # 搜尋型來源的公司各不相同
+            job.salary,
+            "仲介" if job.via_agency else None,
+            f"命中「{s.verdict.reason}」" if s.verdict.reason else None,
+        ]
+        tail = "".join(f"｜{e}" for e in extras if e)
+        print(f"  • {job.title}｜{job.location}｜{job.posted_date or '日期不明'}{tail}")
         print(f"    {job.url}")
         if verbose and job.description:
             print(f"    {job.description[:300].replace(chr(10), ' ')}…")
 
-    if rejected:
-        print("\n  ✗ 篩掉")
-    for s in rejected:
-        detail = f"「{s.verdict.reason}」" if s.verdict.status == "rejected_exclude" else ""
+    # 地區不符的通常是大量海外職缺，只顯示數量
+    listed = [s for s in rejected if s.verdict.status != "rejected_location"]
+    if listed:
+        print("\n  ✗ 篩掉（地區不符的不列出）")
+    for s in listed:
+        detail = f"「{s.verdict.reason}」" if s.verdict.status in ("rejected_exclude", "rejected_description") else ""
         print(f"  • {s.job.title}｜{_REJECT_LABELS[s.verdict.status]}{detail}")
 
 
