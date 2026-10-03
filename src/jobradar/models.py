@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
@@ -18,3 +19,17 @@ class Source(BaseModel):
     keywords: list[str] = []
     exclude: list[str] = []
     type: AtsType | None = None  # 不填則依網址自動辨識
+
+
+class Job(BaseModel):
+    """各 adapter 統一輸出的職缺格式。"""
+
+    source: str
+    ats: AtsType
+    company: str
+    job_id: str
+    title: str
+    location: str | None = None
+    url: str
+    posted_date: date | None = None
+    description: str | None = None  # 清單階段通常沒有，fetch_detail 後才補上
