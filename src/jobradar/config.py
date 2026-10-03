@@ -4,9 +4,11 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from typing import Literal
+
 import yaml
 from dotenv import load_dotenv
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from jobradar.models import Source
 
@@ -107,6 +109,49 @@ def _merge(layers: list[dict]) -> dict:
         if terms:
             merged[field] = list(dict.fromkeys(terms))
     return merged
+
+
+class ScoringSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str = "gpt-6-luna"
+    reasoning_effort: Literal["none", "low", "medium", "high", "xhigh", "max"] = "low"
+    service_tier: Literal["flex", "auto", "default"] = "flex"
+    monthly_budget_usd: float = Field(5.0, ge=0)
+    max_per_run: int = Field(1000, ge=0)
+
+
+class NotificationSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    instant_min_score: int = Field(70, ge=0, le=100)
+    digest_min_score: int = Field(50, ge=0, le=100)
+    baseline_min_score: int = Field(70, ge=0, le=100)
+    digest_after_hour: int = Field(0, ge=0, le=23)
+    new_within_days: int = Field(7, ge=0)
+    long_open_after_days: int = Field(120, ge=1)
+
+
+class AppSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scoring: ScoringSettings = ScoringSettings()
+    notifications: NotificationSettings = NotificationSettings()
+
+
+def load_app_settings(path: Path = ROOT / "settings.yaml") -> AppSettings:
+    """讀取 settings.yaml；檔案不存在時使用預設值。"""
+    if not path.exists():
+        return AppSettings()
+    try:
+        return AppSettings.model_validate(yaml.safe_load(_read(path)) or {})
+    except (yaml.YAMLError, ValidationError) as e:
+        raise ConfigError(f"{path.name} 格式錯誤：\n{e}") from e
+
+
+def load_cvs(directory: Path = ROOT / "cv") -> dict[str, str]:
+    """cv/ 資料夾裡的履歷文字，檔名（不含副檔名）→ 內容。"""
+    return {p.stem: p.read_text(encoding="utf-8").strip() for p in sorted(directory.glob("*.txt"))}
 
 
 def load_profile(path: Path = ROOT / "profile.md") -> str:

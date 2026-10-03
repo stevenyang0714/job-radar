@@ -1,6 +1,10 @@
 # job-radar
 
-個人職缺監控：每天台灣時間 08:00、20:00 檢查 `sources.yaml` 裡的職缺來源，找出新職缺，依 `profile.md` 評分，高分職缺推播到 Telegram。
+個人職缺監控：每天台灣時間 08:00 檢查 `sources.yaml` 裡的職缺來源，找出新職缺，依 `profile.md` 與 `cv/` 裡的履歷用 AI 評分，高分職缺推播到 Telegram。
+
+- `sources.yaml`：要監控的公司與篩選條件
+- `profile.md`、`cv/`：評分依據（背景、求職方向、各版履歷）
+- `settings.yaml`：AI 模型、每月預算、推播門檻與天數
 
 ## 本機設定
 
@@ -16,6 +20,10 @@
 | `uv run jobradar check` | 檢查設定檔、金鑰與各服務連線（不會發送任何訊息） |
 | `uv run jobradar detect <網址>` | 判斷招募網址屬於哪種招募系統，新增公司前先跑這個 |
 | `uv run jobradar fetch [--source 名稱] [-v]` | 抓取職缺並套用硬篩，只顯示結果（不寫資料庫、不推播） |
+| `uv run jobradar run` | 正式執行：抓取、去重、AI 評分、推播 |
+| `uv run jobradar score --sample 5` | 試評幾筆待評分職缺（改 profile.md 後先看看分數） |
+| `uv run jobradar test-notify` | 發示範訊息到 Telegram |
+| `uv run jobradar db-migrate` | 更新資料庫結構（需要 `.env` 的 `SUPABASE_DB_URL`） |
 | `uv run pytest` | 執行測試 |
 
 ## 新增公司

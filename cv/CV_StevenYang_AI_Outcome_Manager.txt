@@ -1,0 +1,66 @@
+Steven J. YANG
+
+INSEAD MBA | AI, governance, risk & cyber strategy lead | 7+ years owning client outcomes end to end across APAC
+Consultant by training, accountable for the full delivery and its results rather than the advice alone. At Deloitte, single point of accountability for delivery and follow-on revenue across up to 11 concurrent engagements, ~70% repeat revenue, and Taiwan's first Zero Trust program grown into a US$4M service line. At iKala, took a one-box on-premises AI server to market with an NVIDIA partner and sourced a US$2M+ pipelinee from nothing in 12 months. Certified AI governance (ISO/IEC 42001) and enterprise AI business developer who holds a build to its promise and turns a delivered engagement into the next one
+
+EDUCATION
+INSEAD	Singapore/Fontainebleau, France
+Master of Business Administration, Class of July 2026	Aug 2025 - Jul 2026
+	•	INSEAD Alumni Association (IAA) Endowed Scholarship
+Kellogg School of Management, Northwestern University	Evanston, USA
+MBA Exchange Program (AI strategy and low-code focus)	Mar 2026 - May 2026
+National Taiwan University	Taipei, Taiwan
+M.S., Biomedical Engineering (tissue engineering, gene editing and machine learning for medical imaging)	Sep 2017 - Jun 2019
+Chang Gung University	Taoyuan, Taiwan
+B.S., Biotechnology and Biomedicine	Sep 2012 - Jun 2016
+
+EXPERIENCE
+ScaleX Consulting (ScaleX Pte. Ltd.)	Singapore
+A boutique strategy consulting firm focusing on market entry and M&A advisory services
+MBA Intern	Jan 2026 - Mar 2026
+	•	Advised a pharmaceutical manufacturer on Singapore and Malaysia market entry (market sizing and regulatory pathway); the recommendation moved the client to relocate manufacturing from Hong Kong to Singapore and open an office there
+	•	Evaluated 50+ competitors, pricing models, and channel strategies to set the client's target segments, and screened the portfolio against HSA and NPRA requirements using self-built AI scrapers that cut regulatory review time
+
+iKala Interactive Media Inc.	Taipei, Taiwan / Singapore
+Top 30 AI SaaS company in Taiwan and enterprise AI transformation provider
+Senior Manager, AI Services and Product (CEO Office from May 2025)	Dec 2024 - Jan 2026
+Enterprise AI business development
+	•	Sourced a US$2M+ book of ~15 enterprise AI accounts in 12 months and personally closed 6 accounts (US$1.5M+), including two anchor deals of US$500K and US$600K, running the full cycle from approach, proposal, PoC, and testing to signed contract within 6 months
+	•	Designed the enterprise target account methodology from zero, turning internal coverage, purchased third-party data, and partner channels into segment-specific sales plays, each with its own ROI threshold, and ran outbound personally to validate it before handover to the commercial team
+	•	Expanded existing accounts with new solutions, such as an AI/ML failure prediction system for a sensor manufacturer, and used PoC-first and signing fee plus subscription structures to lower the barrier to the next contract
+Nexus one-box AI solution with Leadtek and NVIDIA (Sovereign AI solution)
+	•	Co-owned the enterprise AI portfolio from zero to 3 product lines, wrote the function list and set the build sequence with product and engineering, and shipped Nexus in about 6 months, a one-box on-premises solution integrating an AI server with NVIDIA GPUs, a private LLM, RAG, and agentic workflows for regulated buyers that cannot move data to public cloud
+	•	Structured the one-box partnership with Leadtek, an NVIDIA distribution partner: Leadtek supplied the NVIDIA GPU servers while iKala owned the model stack, agentic workflows, deployment, and delivery; set up mutual referrals, brought NVIDIA into the partnership through Leadtek, and engaged Qualcomm directly
+	•	Priced the hardware plus software bundle on a self-built cost and margin model for Nexus's first deals: a ~US$600K AI server, WAF, and software bundle for a security firm and a ~US$100K on-premises deployment for a medical screening provider
+AI infrastructure testing and sizing
+	•	Tested GPU resource scheduling and model deployment performance with engineers during PoC and pre-delivery, checking how workloads shared GPU capacity and how latency and throughput held up under concurrent users, then turned results into per-customer configuration recommendations
+	•	Scoped AI server sizing with Leadtek, from a single one-box unit to rack-mounted multi-GPU servers and cabinet configurations, matching GPU count and form factor to model size, expected concurrent users, and the customer's data center space
+AI governance
+	•	Set the controls that made AI outcomes verifiable rather than claimed, with C-suite executives under ISO/IEC 42001: knowledge-source governance for RAG (data classification, role-based access, source ownership), human-in-the-loop checkpoints and audit trails for AI outputs in financial services and healthcare, and adoption KPIs instrumented at the workflow level (active usage, task completion, time saved); built these into the on-premises product so they held after go-live
+Enablement, market insight, and regional expansion
+	•	Drove AI adoption across sales, consulting, and operations through enablement workshops, boot camps, prompt libraries, and agentic workflow templates; had the direct conversation with function heads whose teams were not using what was built, then fixed the workflow rather than flagging it
+	•	Carried the customer's voice into product for the Kolr to Kolr 2 SaaS upgrade, turning customer feedback, win/loss patterns, and 20+ commercial and competitive analyses across retail, financial services, and manufacturing into the next-generation roadmap
+	•	Built the group operating cadence from scratch: a transformation scorecard of priorities, owners, and targets, a monthly business review, and gap-to-goal reporting to the CEO and regional leadership, turning variance and root cause analysis into next-quarter priorities
+
+Deloitte Touche Tohmatsu Limited (DTTL)	Taipei, Taiwan
+Senior Manager, Cyber and Strategic Risk (Financial Services Accounts and Program Delivery)	Jan 2021 - Dec 2024
+	•	Promoted twice ahead of the standard timeline, from consultant to Senior Manager in 3.5 years, leading a cross-border team of 6 through 70+ projects and up to 11 concurrent client engagements as the single point of accountability for delivery, executive relationships, and follow-on revenue
+	•	Carried a US$2M annual quota from Manager level across renewals and new signings, with ~70% of revenue from repeat clients: used maintenance and retainer engagements to surface each client's next need, then delivered it directly or cross-sold it to other Deloitte practices
+	•	Grew Taiwan's first Zero Trust Architecture program in financial services from a single advisory engagement into multi-year accounts with the country's 5 largest banks: US$4M in revenue, roadmaps committed through 2028, and US$2M of follow-on implementation work
+	•	Audited what was actually built against what was committed: 10+ overseas AML/KYC and IT control reviews for U.S. branches under NYDFS Part 500, and 20+ governance frameworks and readiness reviews in Hong Kong, Singapore, and Thailand aligned to MAS TRM, FSC, HKMA, and SFC
+	•	Locked measurable KPIs, scope, and timeline with clients before work started (e.g., IT operations efficiency, audit error-detection rate) and secured C-suite and board approval on phased plans with named owners and KPIs for 10+ institutions; lead author of the FSC Zero Trust Guidelines (2024) and Digital Identity Verification Guidelines (2023)
+	•	Contributed to a draft of governance-level AI requirements for the financial sector and authored 200+ procedures and playbooks across AI governance, cybersecurity, and data privacy, adopted by 8+ business units and running without ongoing consultant intervention
+
+Encorphin Healthcare Co. Ltd.	Taipei, Taiwan
+Software as a Medical Device startup improving outpatient flow efficiency
+Co-Founder and Chief Executive Officer	Jun 2017 - Feb 2019
+	•	Founded the company and took the product from concept to go-live in 4 hospitals and 2 clinics, defining requirements with 20+ clinicians, sequencing each site rollout, and validating every release in live outpatient flow; raised US$50K in seed funding from a Fortune Global 500 investor
+	•	Cut patient wait time 67%, roughly 37 minutes per visit, by shipping a machine learning based clinical-grade scheduling and workflow system
+
+ADDITIONAL INFORMATION
+Languages: Mandarin (Native), English (Fluent), Taiwanese (Basic) | Work authorization: Taiwan (R.O.C.) | Mobility: Singapore / Global relocation
+Business Development and Alliances: Partner ecosystem and referrals; hardware plus software bundle pricing; pipeline and revenue ownership; deal structuring (PoC-first, signing fee plus subscription); executive relationships; contract negotiation (Mandarin & English)
+Go-to-Market: Target account methodology; segment-specific sales plays and ROI thresholds; pricing and channel strategy; outbound and pipeline build
+AI Infrastructure: On-premises one-box AI servers with NVIDIA GPUs; GPU scheduling and deployment performance testing; server and rack sizing; private LLM, RAG, agentic AI; LLM fine-tuning
+AI Governance and Assurance: Responsible AI governance (ISO/IEC 42001) and AI risk management (ISO/IEC 23894); milestone audits against committed scope and KPI; KPI instrumentation; knowledge-source governance; human-in-the-loop review and audit trails; GDPR and PDPA
+Licenses: ISACA CISA; ISC2 CC; ISO/IEC 42001:2023 Lead Auditor; ISO/IEC 23894:2023; ISO/IEC 27001:2022 Lead Auditor; ISO/IEC 27701:2019; ISO/IEC 27799:2016; BS 10012:2017 Lead Auditor

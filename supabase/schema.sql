@@ -58,6 +58,23 @@ create table if not exists public.notifications (
 create index if not exists notifications_pending_idx on public.notifications (created_at)
   where status = 'pending';
 
+-- AI 評分的用量與費用，用來控管每月預算
+create table if not exists public.ai_usage (
+  id                  bigint generated always as identity primary key,
+  job                 bigint references public.jobs (id) on delete set null,
+  model               text not null,
+  service_tier        text,
+  input_tokens        integer not null,
+  cached_tokens       integer not null default 0,
+  cache_write_tokens  integer not null default 0,
+  output_tokens       integer not null,
+  reasoning_tokens    integer not null default 0,
+  cost_usd            numeric(12, 6) not null,
+  created_at          timestamptz not null default now()
+);
+
+create index if not exists ai_usage_created_idx on public.ai_usage (created_at);
+
 -- 每次執行一筆
 create table if not exists public.runs (
   id           bigint generated always as identity primary key,
@@ -85,7 +102,8 @@ create index if not exists source_runs_source_idx on public.source_runs (source,
 -- 開啟 RLS 且不設任何 policy：只有 secret key（service_role）能讀寫，公開金鑰讀不到
 alter table public.jobs          enable row level security;
 alter table public.notifications enable row level security;
+alter table public.ai_usage      enable row level security;
 alter table public.runs          enable row level security;
 alter table public.source_runs   enable row level security;
 
-grant select, insert, update, delete on public.jobs, public.notifications, public.runs, public.source_runs to service_role;
+grant select, insert, update, delete on public.jobs, public.notifications, public.ai_usage, public.runs, public.source_runs to service_role;
