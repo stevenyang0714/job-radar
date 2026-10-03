@@ -5,10 +5,15 @@ from collections import Counter
 
 import httpx
 
+from datetime import date, timedelta
+
 from jobradar.adapters import ADAPTERS, Adapter, get_adapter
 from jobradar.config import ConfigError, Settings, load_profile, load_settings, load_sources
 from jobradar.detect import detect
-from jobradar.pipeline import Screened, resolve_ats, screen_jobs
+from jobradar.messages import SourceWarning, format_job, format_warnings
+from jobradar.models import Source
+from jobradar.notify import Telegram, TelegramError
+from jobradar.pipeline import RunReport, Screened, describe_error, resolve_ats, run, screen_jobs
 from jobradar.store import TABLES, Store
 from jobradar.web import make_client
 
@@ -17,6 +22,7 @@ _REJECT_LABELS = {
     "rejected_exclude": "排除詞",
     "rejected_description": "內容排除詞",
     "rejected_keyword": "關鍵字不符",
+    "detail_error": "內容抓取失敗",
 }
 
 
@@ -67,17 +73,16 @@ def _check_supabase(s: Settings) -> tuple[bool, str]:
     try:
         with Store(s.supabase_url, s.supabase_secret_key) as store:
             missing = store.missing_tables()
+            missing_columns = [] if missing else store.missing_columns()
     except httpx.HTTPStatusError as e:
         try:
             message = e.response.json().get("message", "")
         except ValueError:
             message = ""
         return False, f"HTTP {e.response.status_code} {message}".strip()
-    if missing:
-        return False, (
-            f"連線成功，但缺少資料表 {', '.join(missing)}"
-            " → 請到 Supabase SQL Editor 執行 supabase/schema.sql"
-        )
+    if missing or missing_columns:
+        what = f"資料表 {', '.join(missing)}" if missing else f"新欄位 {', '.join(missing_columns)}"
+        return False, f"連線成功，但缺少{what} → 請到 Supabase SQL Editor 執行 supabase/schema.sql"
     return True, f"連線成功，資料表 {' / '.join(TABLES)} 都在"
 
 
@@ -117,18 +122,26 @@ def _check_openai(s: Settings) -> tuple[bool, str]:
     return True, f"API key 有效（可用模型 {len(resp.json()['data'])} 個）"
 
 
-def cmd_fetch(args: argparse.Namespace) -> int:
+def _select_sources(names: list[str] | None) -> list[Source] | None:
+    """讀取 sources.yaml，可只取指定的來源；設定有誤時印出原因並回傳 None。"""
     try:
         sources = load_sources()
     except ConfigError as e:
         print(f"❌ {e}")
-        return 1
-    if args.source:
-        unknown = set(args.source) - {s.name for s in sources}
+        return None
+    if names:
+        unknown = set(names) - {s.name for s in sources}
         if unknown:
             print(f"❌ sources.yaml 裡沒有：{', '.join(sorted(unknown))}")
-            return 1
-        sources = [s for s in sources if s.name in args.source]
+            return None
+        sources = [s for s in sources if s.name in names]
+    return sources
+
+
+def cmd_fetch(args: argparse.Namespace) -> int:
+    sources = _select_sources(args.source)
+    if sources is None:
+        return 1
 
     failed = 0
     with make_client() as client:
@@ -141,7 +154,7 @@ def cmd_fetch(args: argparse.Namespace) -> int:
                 screened = screen_jobs(adapter, source, adapter.list_jobs(source))
             except Exception as e:  # 一個來源失敗不影響其他來源
                 failed += 1
-                print(f"❌ 抓取失敗：{_describe_error(e)}")
+                print(f"❌ 抓取失敗：{describe_error(e)}")
                 continue
             _print_screened(adapter, screened, verbose=args.verbose)
     return 1 if failed else 0
@@ -186,7 +199,7 @@ def cmd_detect(args: argparse.Namespace) -> int:
         try:
             result = detect(args.url, client)
         except httpx.HTTPError as e:
-            print(f"❌ 無法讀取網頁：{_describe_error(e)}")
+            print(f"❌ 無法讀取網頁：{describe_error(e)}")
             return 1
     print(f"類型：{result.ats}（依據：{result.how}）")
     if result.url != args.url:
@@ -198,10 +211,105 @@ def cmd_detect(args: argparse.Namespace) -> int:
     return 0
 
 
-def _describe_error(e: Exception) -> str:
-    if isinstance(e, httpx.HTTPStatusError):
-        return f"HTTP {e.response.status_code}（{e.request.url}）"
-    return f"{type(e).__name__}: {e}"
+def cmd_run(args: argparse.Namespace) -> int:
+    """正式的每日流程：抓取、去重、寫入資料庫、建立推播、發送警告與初始盤點。"""
+    sources = _select_sources(args.source)
+    if sources is None:
+        return 1
+    try:
+        settings = load_settings()
+    except ConfigError as e:
+        print(f"❌ {e}")
+        return 1
+
+    notifier = None if args.no_notify else Telegram(settings.telegram_bot_token, settings.telegram_chat_id)
+    with Store(settings.supabase_url, settings.supabase_secret_key) as store, make_client() as client:
+        missing = store.missing_tables() or store.missing_columns()
+        if missing:
+            print(f"❌ 資料庫缺少 {', '.join(missing)} → 請到 Supabase SQL Editor 執行 supabase/schema.sql")
+            return 1
+        try:
+            report = run(sources, store, notifier, client, trigger=args.trigger)
+        except TelegramError as e:
+            print(f"❌ Telegram 發送失敗：{e}")
+            return 1
+        pending = store.count_pending_notifications()
+
+    _print_report(report, pending, sent=notifier is not None)
+    # 警告已成功送到 Telegram 就算正常結束；沒有推播時，以結束代碼提醒有來源失敗
+    return 1 if args.no_notify and report.status != "ok" else 0
+
+
+def _print_report(report: RunReport, pending: dict[str, int], sent: bool) -> None:
+    print(f"執行 #{report.run_id}：{report.status}\n")
+    for r in report.results:
+        tag = "（初始盤點）" if r.baseline else ""
+        if r.status == "ok":
+            notes = "、".join(f"{label} {r.notifications[kind]}" for kind, label in (("new", "🆕"), ("long_open", "⏳")) if r.notifications[kind])
+            print(f"✅ {r.source.name}{tag}：{r.job_count} 筆，新 {r.new_count}，通過硬篩 {r.passed_new}" + (f"，新增推播 {notes}" if notes else ""))
+        else:
+            print(f"{'⏸️' if r.status == 'unavailable' else '❌'} {r.source.name}：{r.error}")
+        if r.warning:
+            print(f"   ⚠️ {r.warning}")
+    print(f"\n待評分的推播：🆕 {pending.get('new', 0)} 筆、⏳ {pending.get('long_open', 0)} 筆（步驟 4 評分後發送）")
+    print(f"Telegram：{'已發送 ' + str(len(report.messages)) + ' 則' if sent and report.messages else '沒有要發送的訊息' if sent else '未發送（--no-notify）'}")
+
+
+def cmd_db_migrate(args: argparse.Namespace) -> int:
+    """執行 supabase/schema.sql，更新資料庫結構（可重複執行）。"""
+    from jobradar.migrate import apply_schema, database_url, redact
+
+    try:
+        url = database_url()
+    except ConfigError as e:
+        print(f"❌ {e}")
+        return 1
+    try:
+        apply_schema(url)
+    except Exception as e:  # 連線或 SQL 錯誤；訊息先遮掉密碼再顯示
+        print(f"❌ 更新失敗：{redact(f'{type(e).__name__}: {e}', url)}")
+        return 1
+    print("✅ 資料庫結構已更新（supabase/schema.sql）")
+    return 0
+
+
+def cmd_test_notify(args: argparse.Namespace) -> int:
+    """發送示範訊息，讓使用者看警告與職缺通知的格式。"""
+    try:
+        settings = load_settings()
+    except ConfigError as e:
+        print(f"❌ {e}")
+        return 1
+    today = date.today()
+    samples = [
+        "🧪 <b>job-radar 測試訊息</b>\n以下是示範格式，不是真的職缺或錯誤。",
+        format_warnings(
+            [
+                SourceWarning("Abbott", "抓取失敗：HTTP 500（abbott.wd5.myworkdayjobs.com）"),
+                SourceWarning("Citi", "上次抓到 480 筆，這次 0 筆，網站可能改版"),
+            ]
+        ),
+        format_job(
+            kind="new", title="Director, Strategic Partnerships", company="Airwallex", location="Singapore",
+            url="https://jobs.ashbyhq.com/airwallex", posted_date=today - timedelta(days=3), today=today, score=82,
+            fit_points=["iKala 企業 AI 0→1 與 US$2M pipeline", "APAC 跨國合作夥伴經驗", "金融科技產業相關"],
+            gaps=["缺少支付產業直接經驗"],
+        ),
+        format_job(
+            kind="long_open", title="Technology Risk Manager", company="LGT", location="Singapore",
+            url="https://www.mycareersfuture.gov.sg/", posted_date=today - timedelta(days=150), today=today, score=76,
+            salary="SGD 10,000–15,000 / 月", via_agency=True, applicants=3,
+        ),
+    ]
+    try:
+        telegram = Telegram(settings.telegram_bot_token, settings.telegram_chat_id)
+        for text in samples:
+            telegram.send(text)
+    except TelegramError as e:
+        print(f"❌ Telegram 發送失敗：{e}")
+        return 1
+    print(f"✅ 已發送 {len(samples)} 則示範訊息到 Telegram")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -219,6 +327,19 @@ def main(argv: list[str] | None = None) -> int:
     detect_cmd = sub.add_parser("detect", help="判斷招募網址屬於哪種招募系統")
     detect_cmd.add_argument("url")
     detect_cmd.set_defaults(func=cmd_detect)
+
+    run_cmd = sub.add_parser("run", help="正式執行：抓取、去重、寫入資料庫、推播警告與初始盤點")
+    run_cmd.add_argument("--source", action="append", help="只處理指定來源（sources.yaml 的 name），可重複")
+    run_cmd.add_argument("--no-notify", action="store_true", help="不發送 Telegram，只寫入資料庫")
+    run_cmd.add_argument("--trigger", default="local", choices=["local", "schedule", "manual"], help="執行來源，記錄用")
+    run_cmd.set_defaults(func=cmd_run)
+
+    sub.add_parser("test-notify", help="發送示範訊息到 Telegram，看警告與職缺通知的格式").set_defaults(
+        func=cmd_test_notify
+    )
+    sub.add_parser("db-migrate", help="用 .env 的 SUPABASE_DB_URL 執行 supabase/schema.sql，更新資料庫結構").set_defaults(
+        func=cmd_db_migrate
+    )
 
     args = parser.parse_args(argv)
     return args.func(args)

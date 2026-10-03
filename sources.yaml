@@ -11,6 +11,7 @@
 #   locations / keywords / exclude 選填，用來覆寫或追加這家公司的條件
 #   type  選填；自動辨識錯誤時手動指定：workday / greenhouse / lever / ashby / mycareersfuture / generic
 #   searches / min_salary  只有 MyCareersFuture 這類搜尋型來源用得到
+#   aliases  選填；公司的其他名稱（例如 Citi 在 MCF 上叫 CITIBANK），用來略過 MCF 上已有專屬來源的公司
 #
 # 比對規則：不分大小寫；英文以完整單字比對（AI 不會比對到 maintain），中文以字串比對
 # 新增公司前，可以先用 `uv run jobradar detect <網址>` 確認系統類型
@@ -215,6 +216,7 @@ sources:
 
   - name: citi
     company: Citi
+    aliases: [Citibank, Citigroup]
     group: finance
     url: https://citi.wd5.myworkdayjobs.com/2
 
@@ -246,6 +248,7 @@ sources:
 
   - name: hpe
     company: HPE
+    aliases: [Hewlett Packard Enterprise]
     group: tech
     url: https://hpe.wd5.myworkdayjobs.com/Jobsathpe
 
@@ -303,11 +306,13 @@ sources:
 
   - name: jnj
     company: Johnson & Johnson
+    aliases: [J&J, Janssen, Johnson and Johnson]
     group: healthcare
     url: https://jj.wd5.myworkdayjobs.com/JJ
 
   - name: msd
     company: MSD
+    aliases: [Merck Sharp, MSD Pharma]
     group: healthcare
     url: https://msd.wd5.myworkdayjobs.com/SearchJobs
 

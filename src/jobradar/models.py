@@ -16,6 +16,7 @@ class Source(BaseModel):
     company: str = Field(min_length=1)
     url: HttpUrl
     group: str | None = None  # sources.yaml groups 裡的分組，例如 healthcare
+    aliases: list[str] = []  # 公司的其他名稱，用來辨識同一家公司出現在 MyCareersFuture 的職缺
     locations: list[str] = []
     keywords: list[str] = []
     exclude: list[str] = []
