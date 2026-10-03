@@ -1,4 +1,4 @@
-from jobradar.filters import find_term, screen_detail, screen_listing
+from jobradar.filters import Verdict, find_term, screen_detail, screen_listing
 from jobradar.models import Job, Source
 
 
@@ -35,6 +35,15 @@ def test_location_rejected_when_not_listed():
     assert verdict.status == "rejected_location"
 
 
+def test_location_aliases_cover_cities_and_chinese_names():
+    source = _source(locations=["Taiwan", "Hong Kong"])
+    assert screen_listing(_job("Risk Manager", location="Taipei, Taiwan"), source) is None
+    assert screen_listing(_job("Risk Manager", location="Hsinchu"), source) is None
+    assert screen_listing(_job("Risk Manager", location="新竹市"), source) is None
+    assert screen_listing(_job("Risk Manager", location="Kowloon"), source) is None
+    assert screen_listing(_job("Risk Manager", location="Tokyo"), source).status == "rejected_location"
+
+
 def test_location_check_skipped_when_adapter_handles_it():
     job = _job("Risk Manager", location="2 Locations")
     assert screen_listing(job, _source(locations=["Taiwan"]), check_location=False) is None
@@ -51,6 +60,12 @@ def test_keywords_match_title_or_description():
     assert screen_detail(_job("AI Governance Lead"), source).reason == "governance"
     assert screen_detail(_job("Manager", description="Own data governance"), source).passed
     assert screen_detail(_job("Warehouse Manager", description="Run the warehouse"), source).status == "rejected_keyword"
+
+
+def test_description_exclusion_runs_before_keywords():
+    source = _source(keywords=["governance"], exclude_description=["Singaporeans only"])
+    job = _job("AI Governance Lead", description="Open to Singaporeans only.")
+    assert screen_detail(job, source) == Verdict("rejected_description", "Singaporeans only")
 
 
 def test_no_keywords_means_everything_passes():

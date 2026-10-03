@@ -1,6 +1,7 @@
 """把職缺內容的 HTML 轉成純文字。"""
 
 import re
+from collections.abc import Iterable
 from html.parser import HTMLParser
 
 _BLOCK_TAGS = {"p", "div", "br", "ul", "ol", "h1", "h2", "h3", "h4", "h5", "h6", "tr", "table"}
@@ -23,6 +24,12 @@ class _TextExtractor(HTMLParser):
 
     def handle_data(self, data: str) -> None:
         self.parts.append(data)
+
+
+def join_unique(parts: Iterable[str | None], sep: str = " / ") -> str | None:
+    """去掉空值與重複後串起來，例如多個地點。"""
+    unique = list(dict.fromkeys(" ".join(p.split()) for p in parts if p and p.strip()))
+    return sep.join(unique) or None
 
 
 def html_to_text(html: str) -> str:

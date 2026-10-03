@@ -60,6 +60,51 @@ sources:
     assert (b.locations, b.keywords, b.exclude) == (["Hong Kong"], [], ["intern", "sales"])
 
 
+def test_groups_sit_between_defaults_and_source(tmp_path):
+    path = _write_sources(
+        tmp_path,
+        """
+defaults:
+  locations: [Taiwan]
+  exclude: [intern]
+groups:
+  tech: {keywords: [account manager], exclude: [engineer]}
+  healthcare: {keywords: [digital], locations: [Singapore]}
+sources:
+  - {name: a, company: A, url: https://jobs.lever.co/a, group: tech, exclude: [director]}
+  - {name: b, company: B, url: https://jobs.lever.co/b, group: healthcare}
+  - {name: c, company: C, url: https://jobs.lever.co/c, group: healthcare, keywords: [market access]}
+""",
+    )
+    a, b, c = load_sources(path)
+    assert (a.group, a.locations, a.keywords, a.exclude) == ("tech", ["Taiwan"], ["account manager"], ["intern", "engineer", "director"])
+    assert (b.locations, b.keywords, b.exclude) == (["Singapore"], ["digital"], ["intern"])
+    assert c.keywords == ["market access"]
+
+
+def test_exclude_description_accumulates_across_layers(tmp_path):
+    path = _write_sources(
+        tmp_path,
+        """
+defaults: {exclude_description: [Singaporeans only]}
+groups: {finance: {exclude_description: [PR only]}}
+sources:
+  - {name: a, company: A, url: https://jobs.lever.co/a, group: finance, exclude_description: [citizens only]}
+""",
+    )
+    [a] = load_sources(path)
+    assert a.exclude_description == ["Singaporeans only", "PR only", "citizens only"]
+
+
+def test_unknown_group_rejected(tmp_path):
+    path = _write_sources(
+        tmp_path,
+        "groups: {tech: {}}\nsources:\n  - {name: a, company: A, url: https://jobs.lever.co/a, group: pharma}\n",
+    )
+    with pytest.raises(ConfigError, match="pharma"):
+        load_sources(path)
+
+
 def test_unknown_defaults_field_rejected(tmp_path):
     path = _write_sources(tmp_path, "defaults: {location: [Taiwan]}\nsources: []\n")
     with pytest.raises(ConfigError, match="defaults"):

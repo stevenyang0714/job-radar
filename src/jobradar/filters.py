@@ -13,12 +13,28 @@ from jobradar.models import Job, Source
 
 @dataclass(frozen=True)
 class Verdict:
-    status: str  # passed / rejected_location / rejected_exclude / rejected_keyword
+    status: str  # passed / rejected_location / rejected_exclude / rejected_description / rejected_keyword
     reason: str = ""  # 命中的詞或不符的地點
 
     @property
     def passed(self) -> bool:
         return self.status == "passed"
+
+
+# 職缺地點常只寫城市或代碼，例如 Greenhouse 只寫「Taipei」、MSD 寫「TWN-Taipei」
+LOCATION_ALIASES = {
+    "taiwan": ["Taipei", "New Taipei", "Hsinchu", "Taichung", "Tainan", "Kaohsiung", "Taoyuan", "TWN", "台灣", "臺灣", "台北", "臺北", "新竹", "台中", "臺中", "高雄", "台南", "臺南", "桃園"],
+    "singapore": ["SGP", "新加坡"],
+    "hong kong": ["HKG", "HKSAR", "Kowloon", "香港"],
+}
+
+
+def expand_locations(locations: Iterable[str]) -> list[str]:
+    """把地區加上別名，例如 Taiwan → Taiwan、Taipei、Hsinchu…"""
+    expanded = []
+    for location in locations:
+        expanded += [location, *LOCATION_ALIASES.get(location.strip().lower(), [])]
+    return list(dict.fromkeys(expanded))
 
 
 @lru_cache(maxsize=2048)
@@ -37,7 +53,7 @@ def find_term(terms: Iterable[str], text: str | None) -> str | None:
 
 def screen_listing(job: Job, source: Source, *, check_location: bool = True) -> Verdict | None:
     """清單階段的篩選。回傳 None 代表通過，要抓完整內容後再比對關鍵字。"""
-    if check_location and source.locations and not find_term(source.locations, job.location):
+    if check_location and source.locations and not find_term(expand_locations(source.locations), job.location):
         return Verdict("rejected_location", job.location or "未標示地點")
     if term := find_term(source.exclude, job.title):
         return Verdict("rejected_exclude", term)
@@ -45,7 +61,9 @@ def screen_listing(job: Job, source: Source, *, check_location: bool = True) -> 
 
 
 def screen_detail(job: Job, source: Source) -> Verdict:
-    """關鍵字比對職稱與職缺內容；沒有設定關鍵字則全部通過。"""
+    """先檢查內容排除詞，再用關鍵字比對職稱與職缺內容；沒有設定關鍵字則全部通過。"""
+    if term := find_term(source.exclude_description, job.description):
+        return Verdict("rejected_description", term)
     if not source.keywords:
         return Verdict("passed")
     if term := find_term(source.keywords, f"{job.title}\n{job.description or ''}"):

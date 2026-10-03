@@ -1,13 +1,16 @@
 # 職缺來源設定
 #
-# defaults：所有來源共用的篩選條件
-#   locations  只保留這些地區的職缺；來源自己有寫 locations 時，以來源的為準
-#   keywords   職稱或職缺內容含任一關鍵字才保留；留空 = 不限；來源自己有寫時，以來源的為準
-#   exclude    職稱含任一排除詞就略過；來源自己寫的排除詞會「加在」這份清單上
+# 篩選條件分三層，依序合併：defaults（全部共用）→ groups（產業分組）→ 各來源自己的設定
+#   locations  只保留這些地區的職缺；後面的層有寫就取代前面的
+#   keywords   職稱或職缺內容含任一關鍵字才保留；後面的層有寫就取代前面的；最後是空的 = 不限
+#   exclude    職稱含任一排除詞就略過；三層的排除詞會累加
+#   exclude_description  職缺內容含任一詞就略過（例如限新加坡公民）；三層累加
 #
 # sources：每個來源
-#   name / company / url 必填；locations / keywords / exclude 選填（沒寫就用 defaults）
-#   type  選填；自動辨識錯誤時手動指定：workday / greenhouse / lever / ashby / generic
+#   name / company / url 必填；group 選填（finance / tech / ai / healthcare）
+#   locations / keywords / exclude 選填，用來覆寫或追加這家公司的條件
+#   type  選填；自動辨識錯誤時手動指定：workday / greenhouse / lever / ashby / mycareersfuture / generic
+#   searches / min_salary  只有 MyCareersFuture 這類搜尋型來源用得到
 #
 # 比對規則：不分大小寫；英文以完整單字比對（AI 不會比對到 maintain），中文以字串比對
 # 新增公司前，可以先用 `uv run jobradar detect <網址>` 確認系統類型
@@ -16,42 +19,7 @@ defaults:
   # profile.md：台灣、新加坡、香港
   locations: [Taiwan, Singapore, Hong Kong]
 
-  # profile.md 四條求職方向的核心詞
-  keywords:
-    # Track A：AI 治理、科技風險、資安
-    - AI
-    - artificial intelligence
-    - governance
-    - risk
-    - cyber
-    - cybersecurity
-    - information security
-    - compliance
-    # Track B：醫療數位轉型、數據與創新
-    - digital
-    - digital health
-    - transformation
-    - data
-    - innovation
-    - market access
-    - commercial excellence
-    # Track C：AI 導入、解決方案、商業化
-    - solutions
-    - business development
-    - partnerships
-    - go-to-market
-    - GTM
-    - product manager
-    # Track D：策略、轉型專案管理
-    - strategy
-    - strategic
-    - consulting
-    - consultant
-    - program manager
-    - programme manager
-    - chief of staff
-
-  # profile.md 第 4 節：排除條件
+  # profile.md 第 4 節：排除條件（所有產業都適用）
   exclude:
     - intern
     - internship
@@ -66,9 +34,289 @@ defaults:
     - pharmacist
     - physician
 
+  # 限新加坡公民／永久居民的職缺無法辦 EP
+  exclude_description:
+    - Singaporeans only
+    - Singaporean only
+    - Singapore Citizens only
+    - Singapore Citizen only
+    - Singaporeans and PRs only
+    - Singaporeans/PRs only
+    - Singaporean/PR only
+    - Singapore Citizens and PRs only
+    - Singapore Citizens or PRs only
+    - Singapore Citizens/PRs only
+    - SC/PR only
+    - SC/SPR only
+    - only Singaporeans
+    - only Singapore Citizens
+
+groups:
+  # 金融：AI 治理、科技風險、資安（Track A），以及策略與轉型
+  finance:
+    keywords:
+      - AI
+      - artificial intelligence
+      - governance
+      - risk
+      - technology risk
+      - cyber
+      - information security
+      - CISO
+      - BISO
+      - compliance
+      - controls
+      - transformation
+      - change
+      - digital
+      - data
+      - strategy
+      - strategic
+      - planning
+      - product manager
+      - solutions
+      - partnerships
+      - business development
+      - 數位
+      - 轉型
+      - 策略
+      - 治理
+      - 風險
+      - 資安
+      - 經營管理
+
+  # 科技：客戶、業務開發、合作夥伴、解決方案、策略營運、專案與產品（Track C、D）
+  tech:
+    keywords:
+      - account manager
+      - account executive
+      - account director
+      - business development
+      - partnerships
+      - partner
+      - alliances
+      - solutions
+      - customer success
+      - customer solutions
+      - sales
+      - go-to-market
+      - GTM
+      - strategy
+      - strategic
+      - operations
+      - program manager
+      - programme manager
+      - product manager
+      - planning
+      - AI
+      - cloud
+      - security
+      - privacy
+      - healthcare
+      - 業務
+      - 專案經理
+      - 策略
+
+  # 純 AI 公司：工程以外的商業、導入、營運、治理職位幾乎都相關
+  ai:
+    keywords:
+      - account
+      - business development
+      - partnerships
+      - solutions
+      - customer
+      - outcome
+      - success
+      - go-to-market
+      - GTM
+      - strategy
+      - operations
+      - program
+      - consulting
+      - advisor
+      - sales
+      - field
+      - delivery
+      - governance
+      - policy
+      - risk
+      - trust
+
+  # 醫藥：藥廠／醫材裡偏數位、數據、AI、轉型的職位（Track B）
+  healthcare:
+    keywords:
+      - digital
+      - digital health
+      - AI
+      - artificial intelligence
+      - data
+      - analytics
+      - business intelligence
+      - transformation
+      - innovation
+      - technology
+      - governance
+      - strategy
+      - strategic
+      - commercial excellence
+      - market access
+      - consulting
+      - consultant
+      - program manager
+      - project management
+      - change management
+    exclude:
+      # 純業務職（profile.md：與 AI、科技、顧問無關的純業務職）
+      - sales representative
+      - sales specialist
+      - medical representative
+
 sources:
+  # ── 新加坡 MyCareersFuture（政府求職網站）──
+  # 公司為外籍人士申請 EP 前，大多數職缺須先刊登在這裡，且一定標示薪資，涵蓋所有在新加坡徵人的公司（含新創）
+  - name: mcf
+    company: MyCareersFuture
+    url: https://www.mycareersfuture.gov.sg/
+    locations: [Singapore]
+    min_salary: 10000  # 月薪上限至少 SGD 10,000
+    # MCF 搜尋比較寬，會撈到很多純技術職；engineer 以完整單字比對，Engineering Manager 不受影響
+    exclude: [engineer]
+    searches:
+      # Track A：AI 治理、科技風險、資安
+      - AI governance
+      - responsible AI
+      - technology risk
+      - cyber risk
+      - information security governance
+      # Track B：醫療數位轉型
+      - digital health
+      - healthcare digital transformation
+      - pharma digital
+      - market access
+      - commercial excellence
+      # Track C：AI 導入、解決方案、商業化
+      - AI business development
+      - AI partnerships
+      - AI solutions
+      - AI customer success
+      - go-to-market
+      # Track D：策略、轉型專案管理
+      - digital transformation
+      - strategy and operations
+      - transformation office
+      - chief of staff
+      - AI program manager
+
+  # ── 金融 ──
+  - name: dbs
+    company: DBS
+    group: finance
+    url: https://dbs.wd3.myworkdayjobs.com/DBS_Careers
+
+  - name: citi
+    company: Citi
+    group: finance
+    url: https://citi.wd5.myworkdayjobs.com/2
+
+  - name: barclays
+    company: Barclays
+    group: finance
+    url: https://barclays.wd3.myworkdayjobs.com/External_Career_Site_Barclays
+
+  - name: blackrock
+    company: BlackRock
+    group: finance
+    url: https://blackrock.wd1.myworkdayjobs.com/BlackRock_Professional
+
+  - name: mastercard
+    company: Mastercard
+    group: finance
+    url: https://mastercard.wd1.myworkdayjobs.com/CorporateCareers
+
+  - name: airwallex
+    company: Airwallex
+    group: finance
+    url: https://jobs.ashbyhq.com/airwallex
+
+  # ── 科技 ──
+  - name: hp
+    company: HP
+    group: tech
+    url: https://hp.wd5.myworkdayjobs.com/ExternalCareerSite
+
+  - name: hpe
+    company: HPE
+    group: tech
+    url: https://hpe.wd5.myworkdayjobs.com/Jobsathpe
+
+  - name: cloudflare
+    company: Cloudflare
+    group: tech
+    url: https://boards.greenhouse.io/cloudflare
+
+  - name: agoda
+    company: Agoda
+    group: tech
+    url: https://job-boards.greenhouse.io/agoda
+
+  - name: insiderone
+    company: Insider One
+    group: tech
+    url: https://jobs.lever.co/insiderone
+
+  # ── 純 AI ──
+  - name: nvidia
+    company: NVIDIA
+    group: ai
+    url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+
+  - name: openai
+    company: OpenAI
+    group: ai
+    url: https://jobs.ashbyhq.com/openai
+
+  - name: anthropic
+    company: Anthropic
+    group: ai
+    url: https://boards.greenhouse.io/anthropic
+
+  - name: databricks
+    company: Databricks
+    group: ai
+    url: https://boards.greenhouse.io/databricks
+
+  - name: elevenlabs
+    company: ElevenLabs
+    group: ai
+    url: https://jobs.ashbyhq.com/elevenlabs
+
+  - name: aaru
+    company: Aaru
+    group: ai
+    url: https://jobs.ashbyhq.com/aaru
+
+  # ── 醫藥 ──
   - name: abbott
     company: Abbott
+    group: healthcare
     url: https://abbott.wd5.myworkdayjobs.com/abbottcareers
-    # 醫療器材／藥品的純業務職（profile.md：與 AI、科技、顧問無關的純業務職）
-    exclude: [sales representative, sales specialist]
+
+  - name: jnj
+    company: Johnson & Johnson
+    group: healthcare
+    url: https://jj.wd5.myworkdayjobs.com/JJ
+
+  - name: msd
+    company: MSD
+    group: healthcare
+    url: https://msd.wd5.myworkdayjobs.com/SearchJobs
+
+  - name: philips
+    company: Philips
+    group: healthcare
+    url: https://philips.wd3.myworkdayjobs.com/jobs-and-careers
+
+  - name: alcon
+    company: Alcon
+    group: healthcare
+    url: https://alcon.wd5.myworkdayjobs.com/careers_alcon

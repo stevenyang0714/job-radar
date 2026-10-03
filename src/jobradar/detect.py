@@ -13,6 +13,7 @@ _HOSTS: list[tuple[re.Pattern[str], AtsType]] = [
     (re.compile(r"(^|\.)greenhouse\.io$"), "greenhouse"),
     (re.compile(r"^jobs\.(eu\.)?lever\.co$"), "lever"),
     (re.compile(r"^jobs\.ashbyhq\.com$"), "ashby"),
+    (re.compile(r"(^|\.)mycareersfuture\.gov\.sg$"), "mycareersfuture"),
 ]
 
 # 公司自有網域的招募頁，常會嵌入招募系統的連結；只擷取到網站名稱，去掉登入頁、追蹤參數等

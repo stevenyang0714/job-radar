@@ -12,8 +12,8 @@ from datetime import date, timedelta
 from typing import Any
 from urllib.parse import urlsplit
 
-from jobradar.adapters.base import Adapter
-from jobradar.filters import find_term, term_pattern
+from jobradar.adapters.base import Adapter, iso_date
+from jobradar.filters import expand_locations, find_term
 from jobradar.models import Job, Source
 from jobradar.text import html_to_text
 
@@ -85,7 +85,8 @@ def match_location_facets(facets: list[dict[str, Any]], locations: list[str]) ->
         return None
     selection = LocationSelection()
     for location in locations:
-        hits = [v for v in candidates if term_pattern(location).search(v.descriptor)]
+        terms = expand_locations([location])
+        hits = [v for v in candidates if find_term(terms, v.descriptor)]
         if not hits:
             selection.missing.append(location)
             continue
@@ -117,13 +118,6 @@ def _posted_date(text: str | None, today: date | None = None) -> date | None:
     if (match := _POSTED_DAYS.search(text)) and "+" not in text:
         return today - timedelta(days=int(match.group(1)))
     return None
-
-
-def _parse_date(text: str | None) -> date | None:
-    try:
-        return date.fromisoformat(text) if text else None
-    except ValueError:
-        return None
 
 
 class WorkdayAdapter(Adapter):
@@ -163,7 +157,7 @@ class WorkdayAdapter(Adapter):
             update={
                 "description": html_to_text(info.get("jobDescription") or ""),
                 "location": " / ".join(filter(None, map(_clean_location, locations))) or job.location,
-                "posted_date": _parse_date(info.get("startDate")) or job.posted_date,
+                "posted_date": iso_date(info.get("startDate")) or job.posted_date,
             }
         )
 
@@ -207,10 +201,11 @@ class WorkdayAdapter(Adapter):
         return jobs
 
     def _filter_locations(self, source: Source, jobs: list[Job]) -> list[Job]:
+        terms = expand_locations(source.locations)
         kept = []
         for job in jobs:
             if job.location and _MULTI_LOCATIONS.match(job.location):
                 job = self.fetch_detail(job)  # 清單只寫「N Locations」，要看詳細資料才知道地點
-            if find_term(source.locations, job.location):
+            if find_term(terms, job.location):
                 kept.append(job)
         return kept

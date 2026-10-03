@@ -4,6 +4,7 @@ from datetime import date
 import httpx
 import pytest
 
+from jobradar.adapters.base import SourceUnavailable, UnexpectedResponse
 from jobradar.adapters.workday import WorkdayAdapter, _posted_date, match_location_facets, parse_site
 from jobradar.models import Job, Source
 
@@ -189,6 +190,30 @@ def test_without_location_facets_matches_text_and_resolves_multi_location_jobs()
 )
 def test_posted_date(text, expected):
     assert _posted_date(text, today=date(2026, 10, 3)) == expected
+
+
+def test_location_aliases_match_coded_facets():
+    facets = [{"facetParameter": "locations", "values": [{"descriptor": "TWN-Taipei-Office", "id": "t1", "count": 3}]}]
+    assert match_location_facets(facets, ["Taiwan"]).applied == {"locations": ["t1"]}
+
+
+def test_maintenance_redirect_raises_source_unavailable():
+    def handler(request):
+        if request.url.host == "static.community.workday.com":
+            return httpx.Response(200, text="<html>maintenance</html>", headers={"content-type": "text/html"})
+        return httpx.Response(303, headers={"Location": "https://static.community.workday.com/maintenance-page.html"})
+
+    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True)
+    with pytest.raises(SourceUnavailable, match="維護"):
+        WorkdayAdapter(client, delay=0).list_jobs(_source(["Taiwan"]))
+
+
+def test_html_instead_of_json_raises_clear_error():
+    def handler(request):
+        return httpx.Response(200, text="<html></html>", headers={"content-type": "text/html"})
+
+    with pytest.raises(UnexpectedResponse, match="預期 JSON"):
+        _adapter(handler).list_jobs(_source([]))
 
 
 def test_request_json_retries_on_server_error(monkeypatch):

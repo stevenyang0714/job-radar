@@ -2,13 +2,23 @@
 
 import time
 from abc import ABC, abstractmethod
+from datetime import date, datetime
 from typing import Any, ClassVar
+from urllib.parse import urlsplit
 
 import httpx
 
 from jobradar.models import AtsType, Job, Source
 
 _RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+class SourceUnavailable(Exception):
+    """網站暫時無法使用（例如例行維護），通常過幾小時就會恢復。"""
+
+
+class UnexpectedResponse(Exception):
+    """網站回傳的不是預期的格式，可能是改版或被導到其他頁面。"""
 
 
 class Adapter(ABC):
@@ -42,6 +52,31 @@ class Adapter(ABC):
             else:
                 if resp.status_code not in _RETRY_STATUS or attempt == self.retries:
                     resp.raise_for_status()
-                    return resp.json()
+                    return _parse_json(resp)
             time.sleep(2**attempt)
         raise AssertionError("unreachable")
+
+
+def iso_date(text: str | None) -> date | None:
+    """解析 2026-09-30 或 2026-09-07T21:25:04-04:00 這類 ISO 格式的日期。"""
+    try:
+        return datetime.fromisoformat(text).date() if text else None
+    except ValueError:
+        return None
+
+
+def first_path_segment(url: str, example: str) -> str:
+    """招募網址的第一段路徑通常就是公司代號，例如 jobs.lever.co/acme 的 acme。"""
+    segments = [s for s in urlsplit(url).path.split("/") if s]
+    if not segments:
+        raise ValueError(f"無法從網址取得公司代號：{url}（格式應為 {example}）")
+    return segments[0]
+
+
+def _parse_json(resp: httpx.Response) -> Any:
+    if resp.history and "maintenance" in str(resp.url).lower():
+        raise SourceUnavailable(f"網站維護中（被導向 {resp.url}）")
+    content_type = resp.headers.get("content-type", "")
+    if "json" not in content_type:
+        raise UnexpectedResponse(f"預期 JSON，收到 {content_type or '未知格式'}（{resp.url}）")
+    return resp.json()
