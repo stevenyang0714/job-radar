@@ -1,0 +1,50 @@
+name: Daily job radar
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 每天 UTC 00:00 = 台灣 08:00（GitHub 排程常會延遲 10～30 分鐘）
+  workflow_dispatch: # 在 Actions 頁面按 Run workflow 手動執行
+    inputs:
+      digest:
+        description: 這次也發每日摘要
+        type: boolean
+        default: true
+
+concurrency:
+  group: job-radar # 同一時間只跑一個，避免重複推播
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0 # 依 .python-version 安裝 Python 3.11，GitHub 主機上預設啟用快取
+
+      - name: Install dependencies
+        run: uv sync --frozen --no-dev
+
+      - name: Run job radar
+        run: uv run --no-dev jobradar run --trigger "$TRIGGER" $DIGEST_FLAG
+        env:
+          TRIGGER: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+          DIGEST_FLAG: ${{ inputs.digest && '--digest' || '' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      # 整個執行失敗（程式錯誤、金鑰錯誤、Telegram 發送失敗等）時另外通知，不會安靜失敗
+      - name: Notify failure
+        if: failure()
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=🚨 job-radar 執行失敗，請查看：${RUN_URL}" > /dev/null
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
