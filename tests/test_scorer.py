@@ -80,6 +80,32 @@ def test_flex_falls_back_to_standard_once():
     assert outcome.usage.service_tier == "default"
 
 
+def _rate_limit(message):
+    return openai.RateLimitError(message, response=httpx.Response(429, request=httpx.Request("POST", "https://api.openai.com")), body=None)
+
+
+def test_account_rate_limit_waits_and_retries_same_tier(monkeypatch):
+    waits = []
+    monkeypatch.setattr("jobradar.scorer.time.sleep", waits.append)
+    limit = _rate_limit("Rate limit reached for gpt-6-luna on tokens per min (TPM). Please try again in 3.711s.")
+    client = FakeClient(limit, _response())
+
+    _scorer(client).score(_job(), "new", TODAY)
+
+    assert [c["service_tier"] for c in client.calls] == ["flex", "flex"]
+    assert waits == [pytest.approx(4.711)]
+
+
+def test_account_rate_limit_gives_up_after_max_attempts(monkeypatch):
+    monkeypatch.setattr("jobradar.scorer.time.sleep", lambda _: None)
+    limit = _rate_limit("Rate limit reached. Please try again in 250ms.")
+    client = FakeClient(limit, limit, limit, limit)
+
+    with pytest.raises(openai.RateLimitError):
+        _scorer(client).score(_job(), "new", TODAY)
+    assert len(client.calls) == 4
+
+
 def test_score_is_clamped():
     client = FakeClient(_response(_result(score=130)))
     assert _scorer(client).score(_job(), None, TODAY).result.score == 100

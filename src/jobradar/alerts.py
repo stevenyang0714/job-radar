@@ -17,7 +17,6 @@ from jobradar.pipeline import NotifierLike, describe_error
 from jobradar.scorer import ScoreOutcome
 
 TAIPEI = timezone(timedelta(hours=8))
-CONCURRENCY = 6  # 同時評分的筆數；Flex 每筆要十幾秒，平行處理才不會太久
 
 
 class AlertStore(Protocol):
@@ -70,8 +69,9 @@ def score_pending(store: AlertStore, scorer: ScorerLike, settings: ScoringSettin
 
     report.budget_usd = settings.monthly_budget_usd
     spent = store.cost_since(month_start(now or datetime.now(timezone.utc)))
-    with ThreadPoolExecutor(CONCURRENCY) as pool:
-        for batch in _batches(items, CONCURRENCY):
+    # Flex 每筆要十幾秒，平行處理才不會太久；筆數受帳號每分鐘的 token 上限限制
+    with ThreadPoolExecutor(settings.concurrency) as pool:
+        for batch in _batches(items, settings.concurrency):
             if spent >= settings.monthly_budget_usd:
                 report.budget_hit = True
                 report.unscored += len(items) - report.scored - report.failed
