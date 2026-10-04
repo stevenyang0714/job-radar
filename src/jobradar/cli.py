@@ -1,7 +1,10 @@
 """命令列入口：uv run jobradar <指令>"""
 
 import argparse
+import subprocess
 from collections import Counter
+
+from dotenv import dotenv_values
 
 import httpx
 
@@ -9,7 +12,17 @@ from datetime import date, datetime, timedelta
 
 from jobradar.adapters import ADAPTERS, Adapter, get_adapter
 from jobradar.alerts import TAIPEI, AlertReport, usage_row, dispatch, score_pending, to_job
-from jobradar.config import ConfigError, Settings, load_app_settings, load_cvs, load_profile, load_settings, load_sources
+from jobradar.config import (
+    REQUIRED_ENV,
+    ROOT,
+    ConfigError,
+    Settings,
+    load_app_settings,
+    load_cvs,
+    load_profile,
+    load_settings,
+    load_sources,
+)
 from jobradar.scorer import Scorer
 from jobradar.detect import detect
 from jobradar.messages import SourceWarning, format_job, format_warnings
@@ -340,6 +353,28 @@ def _print_report(report: RunReport, pending: dict[str, int], sent: bool) -> Non
     print(f"Telegram：{'已發送 ' + str(len(report.messages)) + ' 則' if sent and report.messages else '沒有要發送的訊息' if sent else '未發送（--no-notify）'}")
 
 
+def cmd_copy_secrets(args: argparse.Namespace) -> int:
+    """把 .env 裡 GitHub Actions 需要的值逐一複製到剪貼簿，方便貼到 GitHub Secrets（不會顯示內容，macOS 限定）。"""
+    values = dotenv_values(ROOT / ".env")
+    missing = [name for name in REQUIRED_ENV if not (values.get(name) or "").strip()]
+    if missing:
+        print(f"❌ .env 缺少：{', '.join(missing)}")
+        return 1
+    print(f"打開 https://github.com/stevenyang0714/job-radar/settings/secrets/actions/new ，共 {len(REQUIRED_ENV)} 個：")
+    try:
+        for i, name in enumerate(REQUIRED_ENV, start=1):
+            value = values[name].strip()
+            subprocess.run(["pbcopy"], input=value.encode(), check=True)
+            input(
+                f"\n[{i}/{len(REQUIRED_ENV)}] 📋 已複製 {name} 的值（{len(value)} 字元）\n"
+                f"      Name 填 {name}，Secret 貼上（Cmd+V），按 Add secret；完成後回到這裡按 Enter… "
+            )
+    finally:
+        subprocess.run(["pbcopy"], input=b"", check=True)  # 清空剪貼簿，避免金鑰留在裡面
+    print("\n✅ 全部完成，剪貼簿已清空")
+    return 0
+
+
 def cmd_db_migrate(args: argparse.Namespace) -> int:
     """執行 supabase/schema.sql，更新資料庫結構（可重複執行）。"""
     from jobradar.migrate import apply_schema, database_url, redact
@@ -413,7 +448,7 @@ def main(argv: list[str] | None = None) -> int:
     detect_cmd.add_argument("url")
     detect_cmd.set_defaults(func=cmd_detect)
 
-    run_cmd = sub.add_parser("run", help="正式執行：抓取、去重、寫入資料庫、推播警告與初始盤點")
+    run_cmd = sub.add_parser("run", help="正式執行：抓取、去重、AI 評分、推播（GitHub Actions 每天跑的就是這個）")
     run_cmd.add_argument("--source", action="append", help="只處理指定來源（sources.yaml 的 name），可重複")
     run_cmd.add_argument("--no-notify", action="store_true", help="不發送 Telegram，只寫入資料庫")
     run_cmd.add_argument("--no-score", action="store_true", help="不做 AI 評分（也不發職缺推播）")
@@ -432,6 +467,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     sub.add_parser("db-migrate", help="用 .env 的 SUPABASE_DB_URL 執行 supabase/schema.sql，更新資料庫結構").set_defaults(
         func=cmd_db_migrate
+    )
+    sub.add_parser("copy-secrets", help="把 .env 的金鑰逐一複製到剪貼簿，貼到 GitHub Secrets（不顯示內容）").set_defaults(
+        func=cmd_copy_secrets
     )
 
     args = parser.parse_args(argv)
