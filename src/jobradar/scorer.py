@@ -6,6 +6,8 @@
 - 預設用 Flex 處理（半價、較慢）；資源不足時改用一般速度重試一次
 """
 
+import re
+import time
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Literal
@@ -17,6 +19,20 @@ from jobradar.config import ScoringSettings
 from jobradar.models import Job
 
 MAX_DESCRIPTION_CHARS = 12000
+MAX_ATTEMPTS = 4
+_RETRY_IN = re.compile(r"try again in ([\d.]+)\s*(ms|s)", re.IGNORECASE)
+
+
+def _is_account_limit(error: openai.RateLimitError) -> bool:
+    """帳號每分鐘 token／請求數的上限（換處理方式也沒用），和 Flex 暫時沒有資源不同。"""
+    return "rate limit reached" in str(error).lower()
+
+
+def _retry_after(error: openai.RateLimitError, attempt: int) -> float:
+    if match := _RETRY_IN.search(str(error)):
+        seconds = float(match.group(1)) / (1000 if match.group(2).lower() == "ms" else 1)
+        return seconds + 1
+    return 5.0 * attempt
 
 
 @dataclass(frozen=True)
@@ -136,13 +152,23 @@ class Scorer:
 
     def score(self, job: Job, kind: str | None, today: date) -> ScoreOutcome:
         tier = self.settings.service_tier
-        try:
-            response = self._request(job, kind, today, tier)
-        except (openai.RateLimitError, openai.APITimeoutError):
-            if tier != "flex":
-                raise
-            tier = "auto"  # Flex 資源不足或太慢：改用一般速度重試一次
-            response = self._request(job, kind, today, tier)
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                response = self._request(job, kind, today, tier)
+                break
+            except openai.RateLimitError as e:
+                if _is_account_limit(e) and attempt < MAX_ATTEMPTS:
+                    time.sleep(_retry_after(e, attempt))  # 帳號每分鐘的用量上限：等它指定的秒數再試
+                elif tier == "flex" and not _is_account_limit(e):
+                    tier = "auto"  # Flex 暫時沒有資源：改用一般速度
+                else:
+                    raise
+            except openai.APITimeoutError:
+                if tier != "flex":
+                    raise
+                tier = "auto"  # Flex 太慢：改用一般速度
+        else:
+            raise RuntimeError("評分重試次數用完")
 
         result = response.output_parsed
         if result is None:

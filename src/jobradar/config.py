@@ -119,6 +119,7 @@ class ScoringSettings(BaseModel):
     service_tier: Literal["flex", "auto", "default"] = "flex"
     monthly_budget_usd: float = Field(5.0, ge=0)
     max_per_run: int = Field(1000, ge=0)
+    concurrency: int = Field(3, ge=1, le=20)
 
 
 class NotificationSettings(BaseModel):

@@ -6,6 +6,7 @@ scoring:
   service_tier: flex           # flex = 半價但較慢；auto = 一般速度、全價
   monthly_budget_usd: 5        # 當月評分費用達到上限就停止評分，並發 Telegram 通知
   max_per_run: 1000            # 每次執行最多評幾筆
+  concurrency: 3               # 同時評幾筆；帳號每分鐘上限 20 萬 tokens，每筆約 1.5 萬，3 筆可穩定低於上限
 
 notifications:
   instant_min_score: 70        # 達到這個分數立即推播
