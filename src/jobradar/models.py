@@ -3,7 +3,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-AtsType = Literal["workday", "greenhouse", "lever", "ashby", "mycareersfuture", "generic"]
+AtsType = Literal[
+    "workday", "greenhouse", "lever", "ashby", "mycareersfuture", "ycombinator", "fileai", "japandev", "michaelpage", "generic"
+]
 
 
 class Source(BaseModel):

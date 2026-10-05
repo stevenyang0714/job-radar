@@ -113,6 +113,14 @@ def test_list_jobs_queries_each_facet_group_and_merges_results():
     assert jobs[1].location == "2 Locations"
 
 
+def test_incomplete_postings_are_skipped():
+    def handler(request):
+        postings = [_posting("Risk Manager", "/job/x/Risk_1"), {"bulletFields": ["3169209"]}]
+        return httpx.Response(200, json={"total": 2, "jobPostings": postings})
+
+    assert [j.job_id for j in _adapter(handler).list_jobs(_source([]))] == ["1"]
+
+
 def test_paging_stops_when_workday_repeats_the_last_page():
     page1 = [_posting(f"Job {i}", f"/job/x/Job_{i}") for i in range(20)]
     page2 = [_posting(f"Job {i}", f"/job/x/Job_{i}") for i in range(20, 25)]

@@ -20,6 +20,7 @@ from jobradar.models import Job
 
 MAX_DESCRIPTION_CHARS = 12000
 MAX_ATTEMPTS = 4
+REQUEST_TIMEOUT = 180  # 秒
 _RETRY_IN = re.compile(r"try again in ([\d.]+)\s*(ms|s)", re.IGNORECASE)
 
 
@@ -147,7 +148,8 @@ class Scorer:
         if settings.model not in PRICES:
             raise ValueError(f"scorer.py 的 PRICES 沒有 {settings.model} 的價格，無法控管預算")
         self.settings = settings
-        self._client = client or openai.OpenAI(api_key=api_key, timeout=900, max_retries=2)
+        # Flex 在資源吃緊時可能很久不回應：等 3 分鐘就放棄，由 score() 改用一般速度重試
+        self._client = client or openai.OpenAI(api_key=api_key, timeout=REQUEST_TIMEOUT, max_retries=1)
         self._instructions = build_instructions(profile, cvs)
 
     def score(self, job: Job, kind: str | None, today: date) -> ScoreOutcome:

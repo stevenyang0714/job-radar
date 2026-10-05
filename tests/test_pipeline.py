@@ -5,6 +5,7 @@ import pytest
 
 from jobradar import pipeline
 from jobradar.adapters.base import Adapter, SourceUnavailable
+from jobradar.config import NotificationSettings
 from jobradar.models import Job, Source
 from jobradar.pipeline import notification_kind, process_source, run, screen_jobs
 from jobradar.store import KnownJob, SourceHistory
@@ -97,9 +98,18 @@ def _job(job_id, title="Risk Manager", days_ago=None, company="Acme"):
     return Job(source="acme", ats="workday", company=company, job_id=job_id, title=title, url=f"https://x/{job_id}", posted_date=posted)
 
 
-def _known(pk, job_id, days_ago=30, filter_status="passed", closed=False):
+def _known(pk, job_id, days_ago=30, filter_status="passed", closed=False, location="Singapore"):
     first_seen = datetime(2026, 9, 1, tzinfo=timezone.utc)
-    return KnownJob(pk, "Acme", job_id, filter_status, TODAY - timedelta(days=days_ago), first_seen, first_seen if closed else None)
+    return KnownJob(
+        id=pk,
+        company="Acme",
+        job_id=job_id,
+        filter_status=filter_status,
+        location=location,
+        posted_date=TODAY - timedelta(days=days_ago),
+        first_seen_at=first_seen,
+        closed_at=first_seen if closed else None,
+    )
 
 
 OK_HISTORY = SourceHistory(has_success=True, last_status="ok", last_ok_count=3)
@@ -184,6 +194,38 @@ def test_zero_jobs_after_a_good_run_warns_and_closes_nothing():
 
     assert "0 筆" in result.warning
     assert store.closed == []
+
+
+class ClientSideAdapter(FakeAdapter):
+    handles_location = False  # 例如 Greenhouse：程式自己比對地點
+
+
+def test_new_only_locations_skip_long_open_notifications():
+    rules = NotificationSettings(new_only_locations=["Japan"])
+    source = _source(locations=["Singapore", "Japan"])
+    jobs = [
+        _job("tokyo-old", days_ago=200).model_copy(update={"location": "Tokyo"}),
+        _job("tokyo-new", days_ago=2).model_copy(update={"location": "Tokyo, Japan"}),
+        _job("both-old", days_ago=200).model_copy(update={"location": "Singapore / Tokyo"}),
+    ]
+    store = FakeStore(history={"acme": OK_HISTORY})
+
+    process_source(source, ClientSideAdapter(jobs), store, 1, [], TODAY, rules)
+
+    queued = {store.inserted[n["job"] - 101]["job_id"]: n["kind"] for n in store.notifications}
+    assert queued == {"tokyo-new": "new", "both-old": "long_open"}
+
+
+def test_jobs_rejected_for_location_are_rescreened_after_adding_a_region():
+    known = [_known(1, "tokyo", filter_status="rejected_location", location="Tokyo")]
+    store = FakeStore(history={"acme": OK_HISTORY}, known={"acme": known})
+    job = _job("tokyo", days_ago=3).model_copy(update={"location": "Tokyo"})
+
+    result = process_source(_source(locations=["Singapore", "Japan"]), ClientSideAdapter([job]), store, 1, [], TODAY)
+
+    assert result.rescreened == 1
+    assert [(r["job_id"], r["filter_status"]) for r in store.inserted] == [("tokyo", "passed")]
+    assert dict(result.notifications) == {"new": 1}
 
 
 def test_maintenance_warns_only_when_repeated():

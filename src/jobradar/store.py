@@ -29,6 +29,7 @@ class KnownJob:
     company: str
     job_id: str
     filter_status: str | None
+    location: str | None
     posted_date: date | None
     first_seen_at: datetime
     closed_at: datetime | None
@@ -108,13 +109,14 @@ class Store:
     # ── 職缺 ──
 
     def known_jobs(self, source: str) -> list[KnownJob]:
-        select = "id,company,job_id,filter_status,posted_date,first_seen_at,closed_at"
+        select = "id,company,job_id,filter_status,location,posted_date,first_seen_at,closed_at"
         return [
             KnownJob(
                 id=r["id"],
                 company=r["company"],
                 job_id=r["job_id"],
                 filter_status=r["filter_status"],
+                location=r["location"],
                 posted_date=date.fromisoformat(r["posted_date"]) if r["posted_date"] else None,
                 first_seen_at=datetime.fromisoformat(r["first_seen_at"]),
                 closed_at=datetime.fromisoformat(r["closed_at"]) if r["closed_at"] else None,

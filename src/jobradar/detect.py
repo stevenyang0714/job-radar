@@ -14,6 +14,10 @@ _HOSTS: list[tuple[re.Pattern[str], AtsType]] = [
     (re.compile(r"^jobs\.(eu\.)?lever\.co$"), "lever"),
     (re.compile(r"^jobs\.ashbyhq\.com$"), "ashby"),
     (re.compile(r"(^|\.)mycareersfuture\.gov\.sg$"), "mycareersfuture"),
+    (re.compile(r"(^|\.)ycombinator\.com$"), "ycombinator"),
+    (re.compile(r"(^|\.)file\.ai$"), "fileai"),
+    (re.compile(r"(^|\.)japan-dev\.com$"), "japandev"),
+    (re.compile(r"(^|\.)michaelpage\.co\.jp$"), "michaelpage"),
 ]
 
 # 公司自有網域的招募頁，常會嵌入招募系統的連結；只擷取到網站名稱，去掉登入頁、追蹤參數等

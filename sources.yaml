@@ -17,8 +17,8 @@
 # 新增公司前，可以先用 `uv run jobradar detect <網址>` 確認系統類型
 
 defaults:
-  # profile.md：台灣、新加坡、香港
-  locations: [Taiwan, Singapore, Hong Kong]
+  # profile.md：台灣、新加坡、香港；澳洲（可贊助工作簽證）、日本（不需日文）只通知一週內新刊登（見 settings.yaml）
+  locations: [Taiwan, Singapore, Hong Kong, Australia, Japan]
 
   # profile.md 第 4 節：排除條件（所有產業都適用）
   exclude:
@@ -51,6 +51,36 @@ defaults:
     - SC/SPR only
     - only Singaporeans
     - only Singapore Citizens
+    # 澳洲：要求當地工作權或不提供簽證贊助
+    - full working rights
+    - full Australian working rights
+    - unrestricted working rights
+    - Australian citizens or permanent residents
+    - Australian citizen or permanent resident
+    - must be an Australian citizen
+    - must have Australian citizenship
+    - Australian citizenship is required
+    - no visa sponsorship
+    - visa sponsorship is not available
+    - unable to provide visa sponsorship
+    - unable to offer visa sponsorship
+    - not able to sponsor
+    - cannot sponsor
+    - will not sponsor
+    # 日本：要求日文能力
+    - fluent Japanese
+    - fluency in Japanese
+    - native Japanese
+    - native-level Japanese
+    - business level Japanese
+    - business-level Japanese
+    - Japanese (native
+    - Japanese (business
+    - "Japanese: native"
+    - "Japanese: business"
+    - JLPT N1
+    - JLPT N2
+    - 日本語
 
 groups:
   # 金融：AI 治理、科技風險、資安（Track A），以及策略與轉型
@@ -208,6 +238,34 @@ sources:
       - chief of staff
       - AI program manager
 
+  # ── YC 新加坡（Y Combinator 官方職缺頁，YC 新創在新加坡的最新職缺）──
+  - name: yc
+    company: Y Combinator
+    group: ai
+    url: https://www.ycombinator.com/jobs/location/singapore
+    locations: [Singapore]
+    # YC 職缺以工程為主；engineer 以完整單字比對，Engineering Manager 不受影響
+    exclude: [engineer, designer]
+
+  # ── 日本：不需日文的職缺（只通知一週內新刊登；內容是日文的職缺會自動排除）──
+  - name: japandev
+    company: Japan Dev
+    group: tech
+    url: https://japan-dev.com/jobs-in-japan-for-english-speakers
+    locations: [Japan]
+    exclude: [engineer, developer, designer, writer]
+
+  - name: michaelpage
+    company: Michael Page
+    url: https://www.michaelpage.co.jp/en/jobs?language%5B0%5D=en
+    locations: [Japan]
+    exclude: [engineer, developer]
+    # 仲介職缺橫跨各產業，用四條求職方向的核心詞篩選
+    keywords: [AI, governance, risk, compliance, cyber, security, privacy, digital, transformation, strategy, strategic,
+               business development, partnerships, alliances, product manager, program manager, programme manager,
+               project manager, consultant, consulting, solutions, customer success, account director, market access,
+               commercial excellence]
+
   # ── 金融 ──
   - name: dbs
     company: DBS
@@ -298,6 +356,11 @@ sources:
     group: ai
     url: https://jobs.ashbyhq.com/aaru
 
+  - name: fileai
+    company: file.ai
+    group: ai
+    url: https://www.file.ai/careers
+
   # ── 醫藥 ──
   - name: abbott
     company: Abbott
@@ -325,3 +388,13 @@ sources:
     company: Alcon
     group: healthcare
     url: https://alcon.wd5.myworkdayjobs.com/careers_alcon
+
+  - name: gsk
+    company: GSK
+    group: healthcare
+    url: https://gsk.wd5.myworkdayjobs.com/GSKCareers
+
+  - name: sanofi
+    company: Sanofi
+    group: healthcare
+    url: https://sanofi.wd3.myworkdayjobs.com/SanofiCareers
