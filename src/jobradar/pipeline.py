@@ -8,11 +8,11 @@ from typing import Any, Protocol
 
 import httpx
 
-from jobradar.adapters import Adapter, UnsupportedSource, get_adapter
+from jobradar.adapters import SEARCH_ATS, Adapter, UnsupportedSource, get_adapter
 from jobradar.adapters.base import SourceUnavailable
 from jobradar.config import NotificationSettings
 from jobradar.detect import detect_from_url
-from jobradar.filters import Verdict, find_term, screen_detail, screen_listing
+from jobradar.filters import Verdict, expand_locations, find_term, screen_detail, screen_listing
 from jobradar.messages import BaselineSummary, SourceWarning, format_baseline, format_warnings
 from jobradar.models import AtsType, Job, Source
 from jobradar.store import KnownJob, SourceHistory
@@ -52,6 +52,7 @@ class SourceResult:
     baseline: bool = False
     notifications: Counter = field(default_factory=Counter)  # kind → 筆數
     detail_errors: int = 0
+    rescreened: int = 0  # 之前地區不符、加入新地區後重新篩選的職缺
     error: str | None = None
     warning: str | None = None  # 要推播給使用者的警告
 
@@ -105,6 +106,20 @@ def notification_kind(age_days: int, rules: NotificationSettings = DEFAULT_RULES
     return None
 
 
+def long_open_allowed(location: str | None, source: Source, rules: NotificationSettings) -> bool:
+    """「開了 4 個月以上」只通知一般地區；new_only_locations（例如澳洲、日本）只通知一週內新刊登。"""
+    if not rules.new_only_locations or not location:
+        return True
+    regular = [loc for loc in source.locations if loc not in rules.new_only_locations]
+    if find_term(expand_locations(regular), location):
+        return True
+    return not find_term(expand_locations(rules.new_only_locations), location)
+
+
+def _location_now_matches(job: Job, source: Source, adapter: Adapter) -> bool:
+    return not adapter.handles_location and bool(source.locations) and bool(find_term(expand_locations(source.locations), job.location))
+
+
 def job_row(job: Job, filter_status: str) -> dict[str, Any]:
     row = job.model_dump(mode="json")
     row["filter_status"] = filter_status
@@ -136,10 +151,14 @@ def process_source(
     known = {(k.company, k.job_id): k for k in store.known_jobs(source.name)}
     seen: dict[tuple[str, str], KnownJob] = {}
     new_jobs: dict[tuple[str, str], Job] = {}
+    rescreen: list[Job] = []
     for job in listed:
         key = (job.company, job.job_id)
         if key in known:
             seen[key] = known[key]
+            # 之前因地區不符被篩掉、但 sources.yaml 加了新地區後符合的，重新篩選一次
+            if known[key].filter_status == "rejected_location" and _location_now_matches(job, source, adapter):
+                rescreen.append(job)
         else:
             new_jobs.setdefault(key, job)
 
@@ -148,7 +167,7 @@ def process_source(
     for job in new_jobs.values():
         (duplicates if find_term(other_companies, job.company) else candidates).append(job)
 
-    screened = screen_jobs(adapter, source, candidates)
+    screened = screen_jobs(adapter, source, candidates + rescreen)
     stored = [s for s in screened if s.verdict.status != "detail_error"]
     rows = [job_row(s.job, s.verdict.status) for s in stored] + [job_row(j, "duplicate") for j in duplicates]
     ids = store.insert_jobs(rows) if rows else {}
@@ -159,11 +178,17 @@ def process_source(
     notifications = []
     for s in stored:
         kind = notification_kind(job_age_days(s.job.posted_date, today, today), rules) if s.verdict.passed else None
+        if kind == "long_open" and not long_open_allowed(s.job.location, source, rules):
+            kind = None
         if kind:
             notifications.append({"job": ids[(s.job.company, s.job.job_id)], "kind": kind, "baseline": baseline})
     for k in seen.values():
         # 之前看過、這次仍在的職缺：滿 4 個月時觸發（已通知過的會被資料庫略過）
-        if k.filter_status == "passed" and job_age_days(k.posted_date, k.first_seen_at.date(), today) >= rules.long_open_after_days:
+        if (
+            k.filter_status == "passed"
+            and job_age_days(k.posted_date, k.first_seen_at.date(), today) >= rules.long_open_after_days
+            and long_open_allowed(k.location, source, rules)
+        ):
             notifications.append({"job": k.id, "kind": "long_open", "baseline": False})
     added = store.add_notifications(notifications) if notifications else []
 
@@ -177,6 +202,7 @@ def process_source(
         baseline=baseline,
         notifications=Counter(n["kind"] for n in added),
         detail_errors=len(screened) - len(stored),
+        rescreened=len(rescreen),
     )
     if not listed and (history.last_ok_count or 0) > 0:
         result.warning = f"上次抓到 {history.last_ok_count} 筆，這次 0 筆，網站可能改版"
@@ -196,12 +222,12 @@ def run(
 ) -> RunReport:
     today = today or date.today()
     run_id = store.start_run(trigger)
-    company_names = [name for s in sources if resolve_ats(s) != "mycareersfuture" for name in (s.company, *s.aliases)]
+    company_names = [name for s in sources if resolve_ats(s) not in SEARCH_ATS for name in (s.company, *s.aliases)]
 
     results = []
     for source in sources:
         ats = resolve_ats(source)
-        others = company_names if ats == "mycareersfuture" else []
+        others = company_names if ats in SEARCH_ATS else []
         try:
             result = process_source(source, get_adapter(ats, client), store, run_id, others, today, rules)
         except Exception as e:  # 一個來源失敗不影響其他來源

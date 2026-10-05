@@ -15,3 +15,4 @@ notifications:
   digest_after_hour: 0         # 台灣時間這個小時以後的排程執行才發每日摘要；每天只在 08:00 跑一次，所以設 0 = 每次都發
   new_within_days: 7           # 🆕 刊登幾天內算新職缺
   long_open_after_days: 120    # ⏳ 刊登幾天以上仍未關閉算久開
+  new_only_locations: [Australia, Japan]  # 這些地區只通知 🆕 一週內新刊登，不通知 ⏳ 久開

@@ -101,6 +101,11 @@ def match_location_facets(facets: list[dict[str, Any]], locations: list[str]) ->
     return selection
 
 
+def _valid(postings: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """略過殘缺項目：Workday 偶爾會回傳只有編號、沒有職稱與網址的資料（例如下架到一半的職缺）。"""
+    return [p for p in postings or [] if p.get("externalPath") and p.get("title")]
+
+
 def _clean_location(text: str | None) -> str | None:
     return " ".join(text.split()) if text else None
 
@@ -167,13 +172,13 @@ class WorkdayAdapter(Adapter):
 
     def _collect(self, site: WorkdaySite, facets: dict[str, list[str]], first: dict[str, Any]) -> list[dict[str, Any]]:
         """從第一頁開始翻頁。Workday 只有第一頁的 total 可靠，翻過頭時會重複回傳舊資料。"""
-        postings = list(first.get("jobPostings") or [])
+        postings = _valid(first.get("jobPostings"))
         seen = {p["externalPath"] for p in postings}
         total = first.get("total") or 0
         if total > MAX_JOBS:
             self.notes.append(f"⚠️ 共 {total} 筆，只抓前 {MAX_JOBS} 筆")
         while len(postings) < min(total, MAX_JOBS):
-            page = self._search(site, facets, len(postings)).get("jobPostings") or []
+            page = _valid(self._search(site, facets, len(postings)).get("jobPostings"))
             new = [p for p in page if p["externalPath"] not in seen]
             if not new:
                 break
