@@ -10,9 +10,9 @@ scoring:
 
 notifications:
   instant_min_score: 70        # 達到這個分數立即推播
-  digest_min_score: 50         # 達到這個分數放進每日摘要；低於就不通知
+  digest_min_score: 50         # 達到這個分數放進摘要；低於就不通知
   baseline_min_score: 70       # 新來源第一次執行時，初始盤點清單只列這個分數以上的職缺
-  digest_after_hour: 0         # 台灣時間這個小時以後的排程執行才發每日摘要；每天只在 08:00 跑一次，所以設 0 = 每次都發
+  digest_after_hour: 0         # 台灣時間這個小時以後的排程執行才發摘要；排程每兩天 08:00 跑一次，設 0 = 每次都發
   new_within_days: 7           # 🆕 刊登幾天內算新職缺
   long_open_after_days: 120    # ⏳ 刊登幾天以上仍未關閉算久開
   new_only_locations: [Australia, Japan]  # 這些地區只通知 🆕 一週內新刊登，不通知 ⏳ 久開

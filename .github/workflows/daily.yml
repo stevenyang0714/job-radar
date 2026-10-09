@@ -1,12 +1,12 @@
-name: Daily job radar
+name: Job radar
 
 on:
   schedule:
-    - cron: "0 0 * * *" # 每天 UTC 00:00 = 台灣 08:00（GitHub 排程常會延遲 10～30 分鐘）
+    - cron: "0 0 * * *" # 每天 UTC 00:00 = 台灣 08:00 觸發，再由 gate 決定今天要不要真的跑（GitHub 排程常會延遲 10～30 分鐘）
   workflow_dispatch: # 在 Actions 頁面按 Run workflow 手動執行
     inputs:
       digest:
-        description: 這次也發每日摘要
+        description: 這次也發摘要
         type: boolean
         default: true
 
@@ -15,7 +15,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # 排程每 RUN_EVERY_DAYS 天才真的執行一次（以日期計算，間隔固定）；手動執行不受影響
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        env:
+          RUN_EVERY_DAYS: 2
+          EVENT: ${{ github.event_name }}
+        run: |
+          day=$(( $(date -u +%s) / 86400 ))
+          if [ "$EVENT" = "schedule" ] && [ $(( day % RUN_EVERY_DAYS )) -ne 0 ]; then
+            echo "今天不是執行日（每 $RUN_EVERY_DAYS 天執行一次）"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   run:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
