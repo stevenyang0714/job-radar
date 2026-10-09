@@ -66,7 +66,7 @@ def format_baseline_jobs(lines: list[str], high_count: int, instant_min: int) ->
 
 
 def format_digest(lines: list[str], today: date, digest_min: int, instant_min: int, status: str) -> str:
-    header = f"🗓️ <b>每日摘要</b>（{today:%m/%d}）"
+    header = f"🗓️ <b>職缺摘要</b>（{today:%m/%d}）"
     if lines:
         body = [f"{digest_min}–{instant_min - 1} 分的職缺：", *lines]
     else:

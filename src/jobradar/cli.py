@@ -271,7 +271,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def _status_line(report: RunReport, alerts: AlertReport) -> str:
-    """每日摘要最後的執行狀態；每天都會收到摘要，沒收到就代表排程停了。"""
+    """摘要最後的執行狀態；每次排程執行都會發摘要，沒收到就代表排程停了。"""
     ok = sum(r.status == "ok" for r in report.results)
     down = [r.source.company for r in report.results if r.status != "ok"]
     text = f"⚙️ 這次執行：{ok}/{len(report.results)} 個來源正常"
@@ -291,7 +291,7 @@ def _print_alerts(alerts: AlertReport) -> None:
         print(f"  ❌ {error}")
     print(
         f"推播：立即 {alerts.instant_sent} 則、初始盤點清單 {alerts.baseline_listed} 筆、"
-        f"每日摘要 {'已發送 ' + str(alerts.digest_listed) + ' 筆' if alerts.digest_sent else '未發送'}、未達門檻 {alerts.skipped} 筆"
+        f"摘要 {'已發送 ' + str(alerts.digest_listed) + ' 筆' if alerts.digest_sent else '未發送'}、未達門檻 {alerts.skipped} 筆"
     )
 
 
@@ -452,7 +452,7 @@ def main(argv: list[str] | None = None) -> int:
     run_cmd.add_argument("--source", action="append", help="只處理指定來源（sources.yaml 的 name），可重複")
     run_cmd.add_argument("--no-notify", action="store_true", help="不發送 Telegram，只寫入資料庫")
     run_cmd.add_argument("--no-score", action="store_true", help="不做 AI 評分（也不發職缺推播）")
-    run_cmd.add_argument("--digest", action="store_true", help="這次執行也發每日摘要（排程執行會自動發）")
+    run_cmd.add_argument("--digest", action="store_true", help="這次執行也發摘要（排程執行會自動發）")
     run_cmd.add_argument("--trigger", default="local", choices=["local", "schedule", "manual"], help="執行來源，記錄用")
     run_cmd.set_defaults(func=cmd_run)
 

@@ -116,6 +116,33 @@ groups:
       - 資安
       - 經營管理
 
+  # 金融科技／加密貨幣：風險合規（Track A）＋業務開發與合作夥伴（Track C）都相關
+  fintech:
+    keywords:
+      - AI
+      - governance
+      - risk
+      - compliance
+      - cyber
+      - information security
+      - transformation
+      - strategy
+      - strategic
+      - product manager
+      - program manager
+      - solutions
+      - business development
+      - partnerships
+      - partner manager
+      - alliances
+      - channel
+      - account manager
+      - account executive
+      - account director
+      - customer success
+      - go-to-market
+      - GTM
+
   # 科技：客戶、業務開發、合作夥伴、解決方案、策略營運、專案與產品（Track C、D）
   tech:
     keywords:
@@ -237,6 +264,14 @@ sources:
       - transformation office
       - chief of staff
       - AI program manager
+      # 業務開發、客戶與合作夥伴
+      - business development
+      - account manager
+      - account executive
+      - account director
+      - partner manager
+      - channel manager
+      - alliances
 
   # ── YC 新加坡（Y Combinator 官方職缺頁，YC 新創在新加坡的最新職缺）──
   - name: yc
@@ -360,6 +395,164 @@ sources:
     company: file.ai
     group: ai
     url: https://www.file.ai/careers
+
+  # ── 金融科技（新加坡有據點） ──
+  - name: okx
+    company: OKX
+    group: fintech
+    url: https://boards.greenhouse.io/okx
+
+  - name: stripe
+    company: Stripe
+    group: fintech
+    url: https://boards.greenhouse.io/stripe
+
+  - name: xendit
+    company: Xendit
+    group: fintech
+    url: https://boards.greenhouse.io/xendit
+
+  - name: thunes
+    company: Thunes
+    group: fintech
+    url: https://boards.greenhouse.io/thunes
+
+  - name: nium
+    company: Nium
+    group: fintech
+    url: https://jobs.lever.co/nium
+
+  - name: coinbase
+    company: Coinbase
+    group: fintech
+    url: https://boards.greenhouse.io/coinbase
+
+  - name: ripple
+    company: Ripple
+    group: fintech
+    url: https://boards.greenhouse.io/ripple
+
+  - name: anchorage
+    company: Anchorage Digital
+    group: fintech
+    url: https://jobs.lever.co/anchorage
+
+  - name: fireblocks
+    company: Fireblocks
+    group: fintech
+    url: https://boards.greenhouse.io/fireblocks
+
+  - name: gemini
+    company: Gemini
+    group: fintech
+    url: https://boards.greenhouse.io/gemini
+
+  # ── 科技（新加坡有據點） ──
+  - name: datadog
+    company: Datadog
+    group: tech
+    url: https://boards.greenhouse.io/datadog
+
+  - name: mongodb
+    company: MongoDB
+    group: tech
+    url: https://boards.greenhouse.io/mongodb
+
+  - name: zscaler
+    company: Zscaler
+    group: tech
+    url: https://boards.greenhouse.io/zscaler
+
+  - name: braze
+    company: Braze
+    group: tech
+    url: https://boards.greenhouse.io/braze
+
+  - name: workato
+    company: Workato
+    group: tech
+    url: https://boards.greenhouse.io/workato
+
+  - name: mixpanel
+    company: Mixpanel
+    group: tech
+    url: https://boards.greenhouse.io/mixpanel
+
+  - name: elastic
+    company: Elastic
+    group: tech
+    url: https://boards.greenhouse.io/elastic
+
+  - name: okta
+    company: Okta
+    group: tech
+    url: https://boards.greenhouse.io/okta
+
+  - name: gitlab
+    company: GitLab
+    group: tech
+    url: https://boards.greenhouse.io/gitlab
+
+  - name: twilio
+    company: Twilio
+    group: tech
+    url: https://boards.greenhouse.io/twilio
+
+  - name: figma
+    company: Figma
+    group: tech
+    url: https://boards.greenhouse.io/figma
+
+  - name: snowflake
+    company: Snowflake
+    group: tech
+    url: https://jobs.ashbyhq.com/snowflake
+
+  - name: ninjavan
+    company: Ninja Van
+    group: tech
+    url: https://jobs.lever.co/ninjavan
+
+  - name: moloco
+    company: Moloco
+    group: tech
+    url: https://boards.greenhouse.io/moloco
+
+  # ── AI（新加坡有據點） ──
+  - name: cursor
+    company: Cursor
+    group: ai
+    url: https://jobs.ashbyhq.com/cursor
+
+  - name: sierra
+    company: Sierra
+    group: ai
+    url: https://jobs.ashbyhq.com/sierra
+
+  - name: harvey
+    company: Harvey
+    group: ai
+    url: https://jobs.ashbyhq.com/harvey
+
+  - name: cohere
+    company: Cohere
+    group: ai
+    url: https://jobs.ashbyhq.com/cohere
+
+  - name: palantir
+    company: Palantir
+    group: ai
+    url: https://jobs.lever.co/palantir
+
+  - name: appier
+    company: Appier
+    group: ai
+    url: https://boards.greenhouse.io/appier
+
+  - name: langchain
+    company: LangChain
+    group: ai
+    url: https://jobs.ashbyhq.com/langchain
 
   # ── 醫藥 ──
   - name: abbott

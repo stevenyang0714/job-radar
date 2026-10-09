@@ -109,7 +109,7 @@ def test_failures_are_counted_and_retried_later():
 def test_dispatch_routes_by_score():
     notes = [
         _note(1, 10, score=82),  # 立即推播
-        _note(2, 20, score=60),  # 每日摘要
+        _note(2, 20, score=60),  # 摘要
         _note(3, 30, score=40),  # 不通知
         _note(4, 40, score=90, baseline=True),  # 初始盤點清單
         _note(5, 50, score=72, baseline=True),  # 初始盤點清單
@@ -125,7 +125,7 @@ def test_dispatch_routes_by_score():
     assert "82 分" in notifier.sent[0] and "Job 10" in notifier.sent[0]
     assert "初始盤點" in notifier.sent[1] and notifier.sent[1].index("Job 40") < notifier.sent[1].index("Job 50")
     assert "Job 80" not in notifier.sent[1]
-    assert "每日摘要" in notifier.sent[2] and "Job 20" in notifier.sent[2] and "狀態" in notifier.sent[2]
+    assert "職缺摘要" in notifier.sent[2] and "Job 20" in notifier.sent[2] and "狀態" in notifier.sent[2]
     sent = {i for ids, status in store.marked if status == "sent" for i in ids}
     skipped = {i for ids, status in store.marked if status == "skipped" for i in ids}
     assert sent == {1, 2, 4, 5} and skipped == {3, 7, 8}
