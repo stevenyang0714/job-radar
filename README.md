@@ -1,6 +1,6 @@
 # job-radar
 
-個人職缺監控：每兩天台灣時間 08:00 檢查 `sources.yaml` 裡的職缺來源，找出新職缺，依 `profile.md` 與 `cv/` 裡的履歷用 AI 評分，高分職缺推播到 Telegram。
+個人職缺監控：每兩天台灣凌晨 02:07 檢查 `sources.yaml` 裡的職缺來源，找出新職缺，依 `profile.md` 與 `cv/` 裡的履歷用 AI 評分，高分職缺推播到 Telegram。
 
 - `sources.yaml`：要監控的公司與篩選條件
 - `profile.md`、`cv/`：評分依據（背景、求職方向、各版履歷）
@@ -34,7 +34,7 @@
 
 ## 自動執行（GitHub Actions）
 
-`.github/workflows/daily.yml` 每兩天 UTC 00:00（台灣 08:00）執行 `jobradar run`，GitHub 排程常會延遲 10～30 分鐘。
+`.github/workflows/daily.yml` 每兩天在台灣凌晨 02:07 觸發 `jobradar run`。刻意避開整點：GitHub 排程在 UTC 午夜最擁擠，曾延遲將近 6 小時。
 
 1. 到 GitHub repo → Settings → Secrets and variables → Actions，新增 5 個 secret：`SUPABASE_URL`、`SUPABASE_SECRET_KEY`、`TELEGRAM_BOT_TOKEN`、`TELEGRAM_CHAT_ID`、`OPENAI_API_KEY`。可以用 `uv run jobradar copy-secrets` 把 `.env` 的值逐一複製到剪貼簿
 2. 要立即執行：Actions → Job radar → Run workflow
