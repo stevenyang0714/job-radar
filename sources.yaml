@@ -17,7 +17,7 @@
 # 新增公司前，可以先用 `uv run jobradar detect <網址>` 確認系統類型
 
 defaults:
-  # profile.md：台灣、新加坡、香港；澳洲（可贊助工作簽證）、日本（不需日文）只通知一週內新刊登（見 settings.yaml）
+  # profile.md：台灣、新加坡、香港；澳洲（可贊助工作簽證）、日本（不需日文）只通知近期新刊登（見 settings.yaml）
   locations: [Taiwan, Singapore, Hong Kong, Australia, Japan]
 
   # profile.md 第 4 節：排除條件（所有產業都適用）
@@ -282,7 +282,7 @@ sources:
     # YC 職缺以工程為主；engineer 以完整單字比對，Engineering Manager 不受影響
     exclude: [engineer, designer]
 
-  # ── 日本：不需日文的職缺（只通知一週內新刊登；內容是日文的職缺會自動排除）──
+  # ── 日本：不需日文的職缺（只通知近期新刊登；內容是日文的職缺會自動排除）──
   - name: japandev
     company: Japan Dev
     group: tech

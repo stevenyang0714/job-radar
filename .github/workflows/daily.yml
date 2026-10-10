@@ -25,7 +25,7 @@ jobs:
     steps:
       - id: check
         env:
-          RUN_EVERY_DAYS: 2
+          RUN_EVERY_DAYS: 3
           EVENT: ${{ github.event_name }}
         run: |
           day=$(( ($(date -u +%s) + 8 * 3600) / 86400 ))  # 台灣日期（UTC+8）

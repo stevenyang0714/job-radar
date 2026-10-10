@@ -131,7 +131,7 @@ class NotificationSettings(BaseModel):
     digest_after_hour: int = Field(0, ge=0, le=23)
     new_within_days: int = Field(7, ge=0)
     long_open_after_days: int = Field(120, ge=1)
-    new_only_locations: list[str] = []  # 這些地區只通知一週內新刊登，不通知開了 4 個月以上的
+    new_only_locations: list[str] = []  # 這些地區只通知近期新刊登，不通知開了 4 個月以上的
 
 
 class AppSettings(BaseModel):

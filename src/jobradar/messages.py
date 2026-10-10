@@ -33,7 +33,7 @@ def format_baseline(summaries: list[BaselineSummary]) -> str:
     for s in summaries:
         lines.append(
             f"• <b>{escape(s.company)}</b>：{s.total} 筆，通過硬篩 {s.passed} 筆"
-            f"｜🆕 一週內 {s.new}｜⏳ 4 個月以上 {s.long_open}"
+            f"｜🆕 近期 {s.new}｜⏳ 4 個月以上 {s.long_open}"
         )
     lines.append("\n符合兩種條件的職缺會在 AI 評分後，推播高分的給你。")
     return "\n".join(lines)
@@ -61,7 +61,7 @@ def format_job_line(
 
 def format_baseline_jobs(lines: list[str], high_count: int, instant_min: int) -> str:
     header = f"📋 <b>初始盤點：符合條件的職缺</b>（{len(lines)} 筆，其中 {instant_min} 分以上 {high_count} 筆）"
-    legend = "🆕 一週內新刊登｜⏳ 開了 4 個月以上仍未關；數字是 AI 評分，點職稱看職缺"
+    legend = "🆕 近期新刊登｜⏳ 開了 4 個月以上仍未關；數字是 AI 評分，點職稱看職缺"
     return "\n".join([header, legend, "", *lines])
 
 
