@@ -47,7 +47,7 @@ create index if not exists jobs_unscored_idx on public.jobs (first_seen_at)
 create table if not exists public.notifications (
   id          bigint generated always as identity primary key,
   job         bigint not null references public.jobs (id) on delete cascade,
-  kind        text not null,                    -- new（一週內新刊登）/ long_open（開了 4 個月以上）
+  kind        text not null,                    -- new（近期新刊登）/ long_open（開了 4 個月以上）
   baseline    boolean not null default false,   -- 來源第一次執行時的初始盤點
   status      text not null default 'pending',  -- pending / sent / skipped
   created_at  timestamptz not null default now(),

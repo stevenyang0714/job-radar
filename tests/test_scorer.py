@@ -65,7 +65,7 @@ def test_profile_and_cvs_are_cached_prefix_and_job_comes_after():
     assert developer["role"] == "developer"
     assert developer["content"][0]["prompt_cache_breakpoint"] == {"mode": "explicit"}
     assert "PROFILE" in developer["content"][0]["text"] and "CV TEXT" in developer["content"][0]["text"]
-    assert "AI Partnerships Lead" in user["content"] and "一週內新刊登" in user["content"]
+    assert "AI Partnerships Lead" in user["content"] and "近期新刊登" in user["content"]
     assert call["service_tier"] == "flex" and call["reasoning"] == {"effort": "low"}
     assert outcome.result.score == 82
 

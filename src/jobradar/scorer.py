@@ -127,7 +127,7 @@ def build_instructions(profile: str, cvs: dict[str, str]) -> str:
 
 def describe_job(job: Job, kind: str | None, today: date) -> str:
     age = f"（{(today - job.posted_date).days} 天前）" if job.posted_date else ""
-    label = {"new": "一週內新刊登", "long_open": "刊登 4 個月以上仍未關閉"}.get(kind or "", "")
+    label = {"new": "近期新刊登", "long_open": "刊登 4 個月以上仍未關閉"}.get(kind or "", "")
     lines = [
         f"公司：{job.company}" + ("（仲介刊登，實際雇主可能不同）" if job.via_agency else ""),
         f"職稱：{job.title}",

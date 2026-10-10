@@ -98,7 +98,7 @@ def job_age_days(posted_date: date | None, first_seen: date, today: date) -> int
 
 
 def notification_kind(age_days: int, rules: NotificationSettings = DEFAULT_RULES) -> str | None:
-    """🆕 刊登一週內；⏳ 刊登 4 個月以上仍未關閉（可能找不到人）。"""
+    """🆕 刊登 new_within_days 天內；⏳ 刊登 4 個月以上仍未關閉（可能找不到人）。"""
     if age_days <= rules.new_within_days:
         return "new"
     if age_days >= rules.long_open_after_days:
@@ -107,7 +107,7 @@ def notification_kind(age_days: int, rules: NotificationSettings = DEFAULT_RULES
 
 
 def long_open_allowed(location: str | None, source: Source, rules: NotificationSettings) -> bool:
-    """「開了 4 個月以上」只通知一般地區；new_only_locations（例如澳洲、日本）只通知一週內新刊登。"""
+    """「開了 4 個月以上」只通知一般地區；new_only_locations（例如澳洲、日本）只通知近期新刊登。"""
     if not rules.new_only_locations or not location:
         return True
     regular = [loc for loc in source.locations if loc not in rules.new_only_locations]
